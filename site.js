@@ -36,6 +36,11 @@ for (const [lat, lon, label] of places) {
 addEventListener("hashchange", route);
 route();
 
+// Links to other sites open in a new tab.
+for (const a of document.querySelectorAll("a[href^='http']")) {
+  if (a.host !== location.host) { a.target = "_blank"; a.rel = "noopener"; }
+}
+
 // Player: always on screen, draggable, with what's playing now.
 const STREAM = "https://167-235-224-167.sslip.io/listen/mpr-studio/radio.mp3";
 const NOW = "https://167-235-224-167.sslip.io/api/nowplaying/mpr-studio";
@@ -46,6 +51,7 @@ const now = document.getElementById("now");
 const mute = document.getElementById("mute");
 const volume = document.getElementById("volume");
 const audio = new Audio();
+let show = null;  // a broadcast loaded in the player (see Broadcasts below), or null for live
 audio.crossOrigin = "anonymous";  // the stream allows it, so we can read the waveform
 
 // Web Audio: stream → analyser (waveform) → gain (volume) → speakers.
@@ -70,13 +76,17 @@ function store(key, value) { try { localStorage.setItem(key, value); } catch {} 
 function stored(key) { try { return localStorage.getItem(key); } catch { return null; } }
 
 function setPlaying(playing) {
-  button.textContent = playing ? "■" : "▶";
-  button.setAttribute("aria-label", playing ? "Stop" : "Play");
+  button.textContent = playing ? (show ? "❚❚" : "■") : "▶";
+  button.setAttribute("aria-label", playing ? (show ? "Pause" : "Stop") : "Play");
 }
 
 function toggle() {
+  if (show) {  // a broadcast: pause and resume where it was
+    if (audio.paused) { connect(); gain?.context.resume(); audio.play().catch(() => {}); }
+    else audio.pause();
+    return;
+  }
   if (audio.paused) {
-    pauseShows?.();
     connect();
     gain?.context.resume();
     audio.src = STREAM + "?t=" + Date.now();  // start at the live edge
@@ -118,10 +128,12 @@ function showMuted() {
   else { audio.muted = muted; audio.volume = volume.value; }
 }
 
-// Waveform: moving while playing, flat when stopped.
+// Waveform: moving while playing, flat when stopped; for a broadcast,
+// the whole show with the played part filled in.
 const wave = document.getElementById("wave");
 const samples = new Uint8Array(1024);
 function draw() {
+  if (show) { paintShow(wave, show, audio.currentTime, getComputedStyle(wave).color); return; }
   const dpr = devicePixelRatio || 1;
   const w = wave.clientWidth * dpr, h = wave.clientHeight * dpr;
   if (wave.width !== w || wave.height !== h) Object.assign(wave, { width: w, height: h });
@@ -195,6 +207,7 @@ async function nowPlaying() {
   try {
     const d = await (await fetch(NOW)).json();
     const live = d.live.is_live;
+    if (show) { showBack(live); return; }
     const listening = d.listeners.current ? " · " + d.listeners.current + " listening" : "";
     status.innerHTML = live ? ICON.live + " On air" + listening : ICON.library + " From the library" + listening;
     status.className = live ? "live" : "";
@@ -209,6 +222,7 @@ async function nowPlaying() {
       });
     }
   } catch {
+    if (show) { showBack(false); return; }
     status.textContent = "Off air";
     status.className = "";
     setNow("");
@@ -221,7 +235,9 @@ setInterval(nowPlaying, 10000);
 
 
 // Dragging, remembered between visits.
+const mobile = matchMedia("(max-width: 600px)");
 function place(x, y) {
+  if (mobile.matches) return;
   x = Math.min(Math.max(0, x), innerWidth - player.offsetWidth);
   y = Math.min(Math.max(0, y), innerHeight - player.offsetHeight);
   Object.assign(player.style, { left: x + "px", top: y + "px", right: "auto", bottom: "auto" });
@@ -231,7 +247,7 @@ if (saved) place(saved.x * innerWidth, saved.y * innerHeight);
 
 let drag = null;
 player.addEventListener("pointerdown", (e) => {
-  if (e.target.closest("button, input")) return;
+  if (mobile.matches || e.target.closest("button, input, a") || (show && e.target === wave)) return;
   const r = player.getBoundingClientRect();
   drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
   player.setPointerCapture(e.pointerId);
@@ -250,80 +266,160 @@ player.addEventListener("pointerup", () => {
 addEventListener("resize", () => {
   if (player.style.left) place(player.offsetLeft, player.offsetTop);
 });
+mobile.addEventListener("change", () => {
+  if (mobile.matches) Object.assign(player.style, { left: "", top: "", right: "", bottom: "" });
+  else if (saved) place(saved.x * innerWidth, saved.y * innerHeight);
+});
 
-// Recorded shows: a player per show page, in the floating player's style.
-// The waveform is the whole show (peaks computed when the file is made);
-// click it to jump. Playing a show stops the live player, and vice versa.
-const shows = [];
-function pauseShows() { for (const s of shows) s.audio.pause(); }
-const clock = t => {
-  t = Math.max(0, Math.floor(t));
+// Broadcasts: the floating player also plays recorded shows. A show's page
+// is a remote for it: the big waveform, the time, play and the chapters all
+// control the floating player, which keeps playing while you browse.
+const clock = (t) => {
+  t = Math.max(0, Math.floor(t || 0));
   const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = String(t % 60).padStart(2, "0");
   return h ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
 };
-for (const el of document.querySelectorAll(".show")) {
-  const a = new Audio();
-  a.preload = "none";
-  a.src = el.dataset.src;
-  const show = { audio: a, peaks: [] };
-  shows.push(show);
-  const play = el.querySelector(".show-play"), time = el.querySelector(".show-time");
-  const canvas = el.querySelector(".show-wave"), vol = el.querySelector(".show-vol input");
-  const duration = () => a.duration || Number(el.dataset.duration) || 0;
-  const paint = () => {
-    const dpr = devicePixelRatio || 1;
-    const w = canvas.clientWidth * dpr, h = canvas.clientHeight * dpr;
-    if (canvas.width !== w || canvas.height !== h) Object.assign(canvas, { width: w, height: h });
-    const g = canvas.getContext("2d");
-    g.clearRect(0, 0, w, h);
-    const done = duration() ? a.currentTime / duration() * w : 0;
-    const n = show.peaks.length, step = 3 * dpr;
-    for (let x = 0; x < w; x += step) {
-      const v = n ? show.peaks[Math.floor(x / w * n)] : 0;
-      const y = Math.max(1.5 * dpr, v * h);
-      g.fillStyle = x < done ? "black" : "#bbb";
-      g.fillRect(x, (h - y) / 2, 1.5 * dpr, y);
-    }
-    time.textContent = `${clock(a.currentTime)} / ${clock(duration())}`;
-  };
-  fetch(el.dataset.peaks).then(r => r.json()).then(p => { show.peaks = p; paint(); }).catch(() => {});
-  const set = playing => {
-    play.textContent = playing ? "❚❚" : "▶";
-    play.setAttribute("aria-label", playing ? "Pause" : "Play");
-  };
-  play.onclick = () => {
-    if (a.paused) {
-      if (!audio.paused) toggle();  // stop the live stream
-      pauseShows();
-      a.play().catch(() => set(false));
-    } else a.pause();
-  };
-  a.addEventListener("play", () => set(true));
-  a.addEventListener("pause", () => set(false));
-  a.addEventListener("timeupdate", paint);
-  a.addEventListener("loadedmetadata", paint);
-  // Jump: before the file has loaded, remember the time and apply it once it has.
-  let pending = null;
-  const seek = t => {
-    if (a.readyState >= 1) a.currentTime = t;
-    else { pending = t; a.preload = "metadata"; a.load(); }
-    paint();
-  };
-  a.addEventListener("loadedmetadata", () => { if (pending !== null) { a.currentTime = pending; pending = null; paint(); } });
-  canvas.onclick = e => { if (duration()) seek(e.offsetX / canvas.clientWidth * duration()); };
-  const mute = el.querySelector(".show-mute");
-  vol.value = stored("volume") ?? 1;
-  a.volume = vol.value;
-  vol.oninput = () => { a.muted = false; a.volume = vol.value; el.classList.remove("muted"); };
-  mute.onclick = () => { a.muted = !a.muted; el.classList.toggle("muted", a.muted); mute.setAttribute("aria-label", a.muted ? "Unmute" : "Mute"); };
-  const page = el.closest(".page");
-  for (const b of page.querySelectorAll(".chapters [data-t]")) {
-    b.onclick = () => {
-      seek(Number(b.dataset.t));
-      if (a.paused) play.click();
-    };
+const duration = (b) => (show === b && audio.duration) || b.duration;
+function paintShow(canvas, b, time, color) {
+  const dpr = devicePixelRatio || 1;
+  const w = canvas.clientWidth * dpr, h = canvas.clientHeight * dpr;
+  if (!w || !h) return;
+  if (canvas.width !== w || canvas.height !== h) Object.assign(canvas, { width: w, height: h });
+  const g = canvas.getContext("2d");
+  g.clearRect(0, 0, w, h);
+  const done = time / duration(b) * w, n = b.peaks.length, step = 3 * dpr;
+  for (let x = 0; x < w; x += step) {
+    const y = Math.max(1.5 * dpr, (n ? b.peaks[Math.floor(x / w * n)] : 0) * h);
+    g.fillStyle = x < done ? color : "#bbb";
+    g.fillRect(x, (h - y) / 2, 1.5 * dpr, y);
   }
-  addEventListener("resize", paint);
-  addEventListener("hashchange", () => requestAnimationFrame(paint));
-  requestAnimationFrame(paint);
 }
+const next = document.getElementById("next");
+function showBack(live) {
+  next.innerHTML = live ? '<a href="#" class="back live">On air now: back to live</a>' : '<a href="#" class="back">← Back to live</a>';
+}
+next.addEventListener("click", (e) => {
+  if (!e.target.closest(".back")) return;
+  e.preventDefault();
+  leaveShow();
+  toggle();  // play live
+});
+let last = null;  // the broadcast you left for live, to go back to
+const resume = document.getElementById("resume");
+function showResume() {
+  resume.innerHTML = "";
+  if (show || !last) return;
+  const a = document.createElement("a");
+  a.href = "#";
+  a.textContent = `→ ${last.title}, ${clock(last.pos)}`;
+  resume.append(a);
+}
+resume.addEventListener("click", (e) => {
+  if (!e.target.closest("a")) return;
+  e.preventDefault();
+  if (!audio.paused) toggle();  // stop the live stream
+  playShow(last);
+});
+function savePos(b) { store("pos " + b.title, String(Math.floor(b.pos))); }
+function leaveShow(finished) {
+  if (!show) return;
+  audio.pause();
+  show.pos = finished ? 0 : (pending ?? audio.currentTime);
+  savePos(show);
+  last = finished ? null : show;
+  show = null;
+  audio.removeAttribute("src");
+  audio.load();
+  player.classList.remove("archive");
+  nowText = null;
+  setPlaying(false);
+  showResume();
+  update();
+  nowPlaying();
+  draw();
+}
+let pending = null;
+function seek(t) {
+  if (audio.readyState >= 1) audio.currentTime = t;
+  else pending = t;
+  update();
+}
+audio.addEventListener("loadedmetadata", () => {
+  if (pending !== null && show) { audio.currentTime = pending; pending = null; }
+});
+function playShow(b, t) {
+  if (t == null && show !== b && b.pos < duration(b) - 5) t = b.pos;  // resume where you left it
+  if (show !== b) {
+    audio.pause();
+    show = b;
+    pending = null;
+    audio.src = b.src;
+    player.classList.add("archive");
+    resume.innerHTML = "";
+    status.className = "";
+    setNow(null);
+    now.textContent = b.theme;
+    showBack(false);
+    nowPlaying();
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: b.title + ": " + b.theme, artist: "Montez Press Radio Studio Radio" });
+    }
+  }
+  if (t != null) seek(t);
+  connect();
+  gain?.context.resume();
+  audio.play().catch(() => setPlaying(false));
+}
+audio.addEventListener("ended", () => { if (show) leaveShow(true); });
+
+// Each page's remote, and the floating player's line, follow the audio.
+const broadcasts = [...document.querySelectorAll(".show")].map((el) => ({
+  el,
+  src: el.dataset.src,
+  title: el.dataset.title,
+  theme: el.dataset.theme,
+  duration: Number(el.dataset.duration),
+  pos: Number(stored("pos " + el.dataset.title)) || 0,
+  peaks: [],
+}));
+let lastSave = 0;
+audio.addEventListener("timeupdate", () => {
+  if (!show) return;
+  show.pos = audio.currentTime;
+  if (Date.now() - lastSave > 5000) { lastSave = Date.now(); savePos(show); }
+});
+audio.addEventListener("pause", () => { if (show) savePos(show); });
+function update() {
+  if (show) status.textContent = `${show.title} · ${clock(pending ?? audio.currentTime)} / ${clock(duration(show))}`;
+  for (const b of broadcasts) {
+    const mine = show === b, t = mine ? pending ?? audio.currentTime : b.pos;
+    b.el.querySelector(".show-time").textContent = `${clock(t)} / ${clock(duration(b))}`;
+    const play = b.el.querySelector(".show-play"), on = mine && !audio.paused;
+    play.textContent = on ? "❚❚" : "▶";
+    play.setAttribute("aria-label", on ? "Pause" : "Play");
+    paintShow(b.el.querySelector(".show-wave"), b, t, "black");
+  }
+  if (show) draw();
+}
+for (const ev of ["timeupdate", "play", "pause", "loadedmetadata", "seeked"]) audio.addEventListener(ev, update);
+audio.addEventListener("play", () => setPlaying(true));
+audio.addEventListener("pause", () => setPlaying(false));
+addEventListener("resize", update);
+addEventListener("hashchange", () => requestAnimationFrame(update));
+
+for (const b of broadcasts) {
+  fetch(b.el.dataset.peaks).then((r) => r.json()).then((p) => { b.peaks = p; update(); }).catch(() => {});
+  b.el.querySelector(".show-play").onclick = () => {
+    if (show === b && !audio.paused) audio.pause();
+    else playShow(b);
+  };
+  b.el.querySelector(".show-wave").onclick = (e) =>
+    playShow(b, e.offsetX / e.currentTarget.clientWidth * duration(b));
+  for (const c of b.el.closest(".page").querySelectorAll(".chapters [data-t]")) {
+    c.onclick = () => playShow(b, Number(c.dataset.t));
+  }
+}
+wave.addEventListener("click", (e) => {
+  if (show) seek(e.offsetX / wave.clientWidth * duration(show));
+});
+update();
