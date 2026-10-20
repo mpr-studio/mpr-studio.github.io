@@ -5,7 +5,8 @@ function route() {
   const page = (target && target.closest(".page")) || document.getElementById("home");
   for (const p of document.querySelectorAll(".page")) p.hidden = p !== page;
   for (const a of document.querySelectorAll("nav a")) {
-    if (a.hash === (page.id === "home" ? "" : "#" + page.id)) a.setAttribute("aria-current", "page");
+    const section = page.id.startsWith("broadcast-") ? "broadcasts" : page.id;
+    if (a.hash === (section === "home" ? "" : "#" + section)) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
   if (page.id === "course") { map.invalidateSize(); fit(); }
@@ -75,6 +76,7 @@ function setPlaying(playing) {
 
 function toggle() {
   if (audio.paused) {
+    pauseShows?.();
     connect();
     gain?.context.resume();
     audio.src = STREAM + "?t=" + Date.now();  // start at the live edge
@@ -248,3 +250,80 @@ player.addEventListener("pointerup", () => {
 addEventListener("resize", () => {
   if (player.style.left) place(player.offsetLeft, player.offsetTop);
 });
+
+// Recorded shows: a player per show page, in the floating player's style.
+// The waveform is the whole show (peaks computed when the file is made);
+// click it to jump. Playing a show stops the live player, and vice versa.
+const shows = [];
+function pauseShows() { for (const s of shows) s.audio.pause(); }
+const clock = t => {
+  t = Math.max(0, Math.floor(t));
+  const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = String(t % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
+};
+for (const el of document.querySelectorAll(".show")) {
+  const a = new Audio();
+  a.preload = "none";
+  a.src = el.dataset.src;
+  const show = { audio: a, peaks: [] };
+  shows.push(show);
+  const play = el.querySelector(".show-play"), time = el.querySelector(".show-time");
+  const canvas = el.querySelector(".show-wave"), vol = el.querySelector(".show-vol input");
+  const duration = () => a.duration || Number(el.dataset.duration) || 0;
+  const paint = () => {
+    const dpr = devicePixelRatio || 1;
+    const w = canvas.clientWidth * dpr, h = canvas.clientHeight * dpr;
+    if (canvas.width !== w || canvas.height !== h) Object.assign(canvas, { width: w, height: h });
+    const g = canvas.getContext("2d");
+    g.clearRect(0, 0, w, h);
+    const done = duration() ? a.currentTime / duration() * w : 0;
+    const n = show.peaks.length, step = 3 * dpr;
+    for (let x = 0; x < w; x += step) {
+      const v = n ? show.peaks[Math.floor(x / w * n)] : 0;
+      const y = Math.max(1.5 * dpr, v * h);
+      g.fillStyle = x < done ? "black" : "#bbb";
+      g.fillRect(x, (h - y) / 2, 1.5 * dpr, y);
+    }
+    time.textContent = `${clock(a.currentTime)} / ${clock(duration())}`;
+  };
+  fetch(el.dataset.peaks).then(r => r.json()).then(p => { show.peaks = p; paint(); }).catch(() => {});
+  const set = playing => {
+    play.textContent = playing ? "❚❚" : "▶";
+    play.setAttribute("aria-label", playing ? "Pause" : "Play");
+  };
+  play.onclick = () => {
+    if (a.paused) {
+      if (!audio.paused) toggle();  // stop the live stream
+      pauseShows();
+      a.play().catch(() => set(false));
+    } else a.pause();
+  };
+  a.addEventListener("play", () => set(true));
+  a.addEventListener("pause", () => set(false));
+  a.addEventListener("timeupdate", paint);
+  a.addEventListener("loadedmetadata", paint);
+  // Jump: before the file has loaded, remember the time and apply it once it has.
+  let pending = null;
+  const seek = t => {
+    if (a.readyState >= 1) a.currentTime = t;
+    else { pending = t; a.preload = "metadata"; a.load(); }
+    paint();
+  };
+  a.addEventListener("loadedmetadata", () => { if (pending !== null) { a.currentTime = pending; pending = null; paint(); } });
+  canvas.onclick = e => { if (duration()) seek(e.offsetX / canvas.clientWidth * duration()); };
+  const mute = el.querySelector(".show-mute");
+  vol.value = stored("volume") ?? 1;
+  a.volume = vol.value;
+  vol.oninput = () => { a.muted = false; a.volume = vol.value; el.classList.remove("muted"); };
+  mute.onclick = () => { a.muted = !a.muted; el.classList.toggle("muted", a.muted); mute.setAttribute("aria-label", a.muted ? "Unmute" : "Mute"); };
+  const page = el.closest(".page");
+  for (const b of page.querySelectorAll(".chapters [data-t]")) {
+    b.onclick = () => {
+      seek(Number(b.dataset.t));
+      if (a.paused) play.click();
+    };
+  }
+  addEventListener("resize", paint);
+  addEventListener("hashchange", () => requestAnimationFrame(paint));
+  requestAnimationFrame(paint);
+}
