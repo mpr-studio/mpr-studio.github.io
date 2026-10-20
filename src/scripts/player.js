@@ -2,8 +2,7 @@
 const STREAM = "https://167-235-224-167.sslip.io/listen/mpr-studio/radio.mp3";
 const NOW = "https://167-235-224-167.sslip.io/api/nowplaying/mpr-studio";
 const player = document.getElementById("player");
-const source = document.getElementById("source");
-const back = document.getElementById("back");
+const swap = document.getElementById("swap");
 const schedule = JSON.parse(player.dataset.schedule || "[]");
 const button = document.getElementById("play");
 const status = document.getElementById("status");
@@ -186,8 +185,9 @@ async function nowPlaying() {
     const live = d.live.is_live;
     onAir = live;
     nextBroadcast();
-    showSource();
-    if (show) return;
+    if (show) { station = live ? "On air now" : "From the library"; showSwap(); return; }
+    station = live ? "On air now" : "From the library";
+    showSwap();
     const listening = d.listeners.current ? " · " + d.listeners.current + " listening" : "";
     status.innerHTML = live ? ICON.live + " On air" + listening : ICON.library + " From the library" + listening;
     status.className = live ? "live" : "";
@@ -203,7 +203,8 @@ async function nowPlaying() {
     }
   } catch {
     onAir = false;
-    showSource();
+    station = "Off air";
+    showSwap();
     if (show) return;
     status.textContent = "Off air";
     status.className = "";
@@ -275,21 +276,27 @@ function paintShow(canvas, b, time, color) {
     g.fillRect(x, (h - y) / 2, 1.5 * dpr, y);
   }
 }
-// The player's sources: the live stream and every broadcast in the archive,
-// in a dropdown ("Live", "Broadcast 1: Architectural discourse", ...). On a
-// broadcast, "← Live" goes back. Switching keeps the state: if something was
-// playing, the new source starts playing (live at the live edge, a broadcast
-// where you left it); if not, it just switches. Clicking a waveform only
-// moves the position; ▶ and the chapters play.
+// The player plays one source at a time: the station (live shows and the
+// library) or a broadcast from the archive. A line at the bottom is always
+// there and offers the other one: on the station, "↩ Broadcast 1, 23:14"
+// (where you left it, or the latest broadcast); on a broadcast, "● Live: From
+// the library". Clicking it switches and plays. Waveforms only move the
+// position; ▶ and the chapters play. A finished broadcast hands back to live.
 let last = null;  // the last broadcast played, remembered between visits
-function showSource() {
-  source.value = show ? show.src : "";
-  source.options[0].textContent = onAir ? "Live: on air" : "Live";
-  back.hidden = !show;
-  back.classList.toggle("live", onAir);
+let latest = null;  // the most recent broadcast in the archive
+let station = "From the library";
+function showSwap() {
+  swap.className = "";
+  if (show) {
+    swap.textContent = station === "On air now" ? "● On air now" : `● Live: ${station}`;
+    if (onAir) swap.className = "live";
+  } else {
+    const b = last ?? latest;
+    swap.textContent = b ? `↩ ${b.title}${b.pos > 5 ? ", " + clock(b.pos) : ""}` : "\u00a0";
+  }
+  swap.disabled = !show && !(last ?? latest);
 }
-source.addEventListener("change", () => switchTo(source.value ? catalog.get(source.value) : null));
-back.addEventListener("click", () => switchTo(null));
+swap.addEventListener("click", () => switchTo(show ? null : last ?? latest, { play: true }));
 function savePos(b) { store("pos " + b.title, String(Math.floor(b.pos))); }
 function remember(b) {
   last = b;
@@ -324,7 +331,8 @@ function switchTo(target, { play } = {}) {
     nowPlaying();
   }
   setPlaying(false);
-  showSource();
+  showSwap();
+  mediaControls();
   update();
   draw();
   if (playing) toggle();
@@ -345,9 +353,12 @@ function playShow(b, t) {
 }
 audio.addEventListener("ended", () => {
   if (!show) return;
-  show.pos = 0;
-  savePos(show);
-  switchTo(null, { play: false });
+  const b = show;
+  switchTo(null, { play: true });  // back to the station
+  b.pos = 0;  // and the broadcast starts over next time
+  savePos(b);
+  showSwap();
+  update();
 });
 
 // Each page's remote, and the floating player's line, follow the audio.
@@ -364,10 +375,7 @@ function known({ src, title, theme, guests, duration, peaks }) {
   return b;
 }
 const broadcast = (el) => catalog.get(el.dataset.src) ?? known(el.dataset);
-for (const m of JSON.parse(player.dataset.broadcasts || "[]")) {
-  known(m);
-  source.add(new Option(`${m.title}: ${m.theme}`, m.src));
-}
+for (const m of JSON.parse(player.dataset.broadcasts || "[]")) latest = known(m);
 last = catalog.get(stored("last")) ?? null;
 let remotes = [];
 let lastSave = 0;
@@ -377,6 +385,22 @@ audio.addEventListener("timeupdate", () => {
   if (Date.now() - lastSave > 5000) { lastSave = Date.now(); savePos(show); }
 });
 audio.addEventListener("pause", () => { if (show) savePos(show); });
+addEventListener("visibilitychange", () => { if (show && document.hidden) savePos(show); });
+
+// Lock screen and media keys: skips and seeking only for a broadcast.
+function mediaControls() {
+  if (!("mediaSession" in navigator)) return;
+  const set = (action, fn) => { try { navigator.mediaSession.setActionHandler(action, fn); } catch {} };
+  set("seekbackward", show ? (d) => seek(Math.max(0, audio.currentTime - (d.seekOffset || 15))) : null);
+  set("seekforward", show ? (d) => seek(Math.min(duration(show), audio.currentTime + (d.seekOffset || 15))) : null);
+  set("seekto", show ? (d) => seek(d.seekTime) : null);
+}
+let lastPosition = 0;
+audio.addEventListener("timeupdate", () => {
+  if (!show || !("mediaSession" in navigator) || Date.now() - lastPosition < 1000 || !audio.duration) return;
+  lastPosition = Date.now();
+  try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: Math.min(audio.currentTime, audio.duration), playbackRate: 1 }); } catch {}
+});
 function update() {
   if (show) status.textContent = `${show.title} · ${clock(pending ?? audio.currentTime)} / ${clock(duration(show))}`;
   for (const { el, b } of remotes) {
@@ -420,7 +444,7 @@ document.addEventListener("astro:page-load", () => {
     if (a.host !== location.host) { a.target = "_blank"; a.rel = "noopener"; }
   }
   nextBroadcast();
-  showSource();
+  showSwap();
   const el = document.getElementById("map");
   if (el && window.L) {
     map?.remove();

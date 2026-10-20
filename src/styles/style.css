@@ -160,11 +160,9 @@ sup { line-height: 0; }
 
 /* The floating player playing a broadcast. */
 #player.archive #wave { cursor: pointer; }
-#pick { display: flex; align-items: center; gap: .6em; }
-#back { font: inherit; padding: 0; color: inherit; background: none; border: 0; cursor: pointer; white-space: nowrap; }
-#back.live { color: #e10600; }
-#back[hidden] { display: none; }
-#source { flex: 1; min-width: 0; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid; border-radius: 0; padding: 0 1.2em 0 0; cursor: pointer; appearance: none; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: right .45em center, right .15em center; background-size: .3em .3em; background-repeat: no-repeat; text-overflow: ellipsis; }
+#swap { display: block; width: 100%; font: inherit; padding: 0; color: inherit; background: none; border: 0; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#swap.live { color: #e10600; }
+#swap:disabled { cursor: default; }
 
 /* Phones: a full-width bar along the bottom, not draggable. */
 @media (max-width: 600px) {
