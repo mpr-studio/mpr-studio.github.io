@@ -128,7 +128,13 @@ sup { line-height: 0; }
 .leaflet-container { font: inherit; font-size: .75em; }
 
 /* Broadcasts: the list, and each show's own player, in the floating player's style. */
-.broadcasts { padding-left: 1.2em; }
+.upcoming { list-style: none; padding: 0; }
+.upcoming time { display: inline-block; min-width: 9em; font-variant-numeric: tabular-nums; }
+.archived { margin-bottom: 3em; }
+.archived h3 { font-size: 1.5em; line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 .25em; }
+.archived h3 a { text-decoration: none; }
+.archived .show { margin: 1em 0; }
+#next-broadcast a.live { color: #e10600; }
 .show {
   display: grid;
   grid-template-columns: auto 1fr;

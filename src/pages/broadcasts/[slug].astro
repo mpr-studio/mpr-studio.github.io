@@ -1,0 +1,37 @@
+---
+import Base from "../../layouts/Base.astro";
+import Remote from "../../components/Remote.astro";
+import { getEntries, render } from "astro:content";
+import { broadcasts, aired, title, and, long } from "../../lib/broadcasts";
+
+// A broadcast gets its page once it has aired (has a recording).
+export async function getStaticPaths() {
+  return (await broadcasts()).filter(({ b }) => aired(b)).map(({ b }) => ({ params: { slug: b.id }, props: { b } }));
+}
+const { b } = Astro.props;
+const { Content } = await render(b);
+const guests = await Promise.all((await getEntries(b.data.guests)).map(async (g) => ({ name: g.data.name, Bio: (await render(g)).Content })));
+const seconds = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
+---
+<Base title={title(b)}>
+<h1>{title(b)}</h1>
+<p><time datetime={b.data.date.toISOString()}>{long(b.data.date)}</time>, {Math.round((b.data.duration ?? 0) / 60)} minutes</p>
+<Remote b={b} />
+<p>{b.data.hosts.length > 0 && `Hosted by ${and(b.data.hosts)}.`}{guests.length > 0 && ` ${guests.length > 1 ? "Guests" : "Guest"}: ${and(guests.map((g) => g.name))}.`}</p>
+<Content />
+{b.data.chapters.length > 0 && (
+  <Fragment>
+    <h2>Chapters</h2>
+    <ol class="chapters">
+      {b.data.chapters.map((c) => <li><button type="button" data-t={seconds(c.time)}>{c.time}</button> {c.title}</li>)}
+    </ol>
+  </Fragment>
+)}
+{guests.length > 0 && (
+  <Fragment>
+    <h2>{guests.length > 1 ? "Guests" : "Guest"}</h2>
+    {guests.map(({ Bio }) => <Bio />)}
+  </Fragment>
+)}
+<p><a class="download" href={b.data.audio} download>Download (MP3)</a></p>
+</Base>

@@ -1,0 +1,13 @@
+---
+// A broadcast's controls: play and its waveform, driving the floating player.
+import { clock, type Broadcast } from "../lib/broadcasts";
+interface Props { b: Broadcast }
+const { b } = Astro.props;
+---
+<div class="show" data-src={b.data.audio} data-peaks={b.data.peaks} data-duration={b.data.duration} data-title={`Broadcast ${b.data.number}`} data-theme={b.data.theme}>
+<button class="show-play" type="button" aria-label="Play">▶</button>
+<div>
+<p class="show-time">0:00 / {clock(b.data.duration ?? 0)}</p>
+<canvas class="show-wave"></canvas>
+</div>
+</div>

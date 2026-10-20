@@ -1,15 +1,36 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { getCollection, getEntry } from "astro:content";
-const list = (await getCollection("broadcasts")).sort((a, b) => b.data.number - a.data.number);
-const guests = await Promise.all(list.map((b) => (b.data.guest ? getEntry(b.data.guest) : null)));
-const day = (d: Date) => d.toLocaleDateString("en-US", { timeZone: "America/New_York", month: "long", day: "numeric", year: "numeric" });
+import Remote from "../../components/Remote.astro";
+import { render } from "astro:content";
+import { broadcasts, aired, url, title, and, short, hour } from "../../lib/broadcasts";
+const all = await broadcasts();
+const upcoming = all.filter(({ b }) => !aired(b));
+const archive = await Promise.all(all.filter(({ b }) => aired(b)).reverse().map(async (x) => ({ ...x, Content: (await render(x.b)).Content })));
 ---
 <Base title="Broadcasts">
 <h1>Broadcasts</h1>
-<ol class="broadcasts" reversed>
-{list.map((b, i) => (
-  <li><a href={`/broadcasts/${b.data.number}/`}>Broadcast {b.data.number}</a>, <time datetime={b.data.date.toISOString()}>{day(b.data.date)}</time>: {b.data.theme}{guests[i] && `, with ${guests[i].data.name}`}</li>
-))}
-</ol>
+{upcoming.length > 0 && (
+  <Fragment>
+    <h2>Upcoming</h2>
+    <ul class="upcoming">
+      {upcoming.map(({ b, guests }) => (
+        <li><time datetime={b.data.date.toISOString()}>{short(b.data.date)}, {hour(b.data.date)}</time> {b.data.theme}{guests.length > 0 && ` · ${and(guests)}`}</li>
+      ))}
+    </ul>
+  </Fragment>
+)}
+{archive.length > 0 && (
+  <Fragment>
+    <h2>Archive</h2>
+    {archive.map(({ b, guests, Content }) => (
+      <article class="archived">
+        <h3><a href={url(b)}>{title(b)}</a></h3>
+        <p><time datetime={b.data.date.toISOString()}>{short(b.data.date)}</time>, {Math.round((b.data.duration ?? 0) / 60)} minutes{guests.length > 0 && `, with ${and(guests)}`}.</p>
+        <Remote b={b} />
+        {b.data.hosts.length > 0 && <p>Hosted by {and(b.data.hosts)}.</p>}
+        <Content />
+      </article>
+    ))}
+  </Fragment>
+)}
 </Base>

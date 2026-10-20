@@ -6,7 +6,7 @@ audio: https://mpr-studio.github.io/broadcasts/broadcast-1.mp3
 peaks: /broadcasts/broadcast-1.json
 duration: 3376
 hosts: [Dan Girgis, Rodrigo Escandón Cesarman]
-guest: julian-escudero-geltman
+guests: [julian-escudero-geltman]
 chapters:
   - { time: "0:00", title: "Introduction: the station and the guests" }
   - { time: "5:48", title: "Dan reads “A Critical Look at Architectural Critique Today”" }

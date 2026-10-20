@@ -1,7 +1,10 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import "../styles/style.css";
-import schedule from "../data/schedule.json";
+import { broadcasts, and } from "../lib/broadcasts";
+const all = await broadcasts();
+const slugs = Object.fromEntries(all.map(({ b }) => [b.data.number, b.id]));
+const schedule = all.map(({ b, guests }) => ({ start: b.data.date.toISOString(), theme: b.data.theme, guests: and(guests), aired: Boolean(b.data.audio) }));
 
 interface Props { title?: string }
 const { title } = Astro.props;
@@ -16,11 +19,11 @@ const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith(
 <title>{title ? `${title} · Montez Press Radio Studio` : "Montez Press Radio Studio"}</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script is:inline>
+<script is:inline define:vars={{ slugs }}>
   // Old addresses (#course, #broadcasts, #broadcast-1) go to their pages.
   (function () {
     var h = location.hash, m = h.match(/^#broadcast-(\d+)$/);
-    var to = h === "#course" ? "/course/" : h === "#broadcasts" ? "/broadcasts/" : m ? "/broadcasts/" + m[1] + "/" : null;
+    var to = h === "#course" ? "/course/" : h === "#broadcasts" ? "/broadcasts/" : m ? "/broadcasts/" + (slugs[m[1]] ? slugs[m[1]] + "/" : "") : null;
     if (to) location.replace(to);
   })();
 </script>

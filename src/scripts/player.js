@@ -160,10 +160,30 @@ const ICON = {
   library: '<svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.25"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/></svg>',
 };
 
+// Home page: the next broadcast, in words, or "On air now" during a show.
+let onAir = false;
+function nextBroadcast() {
+  const el = document.getElementById("next-broadcast");
+  if (!el) return;
+  if (onAir) { el.innerHTML = '<a href="/broadcasts/" class="live">On air now</a>'; return; }
+  const t = Date.now(), s = schedule.find((s) => !s.aired && Date.parse(s.start) + 3600e3 > t);
+  if (!s) { el.textContent = ""; return; }
+  const zone = { timeZone: "America/New_York" }, d = new Date(s.start);
+  const day = d.toLocaleDateString("en-US", { ...zone, weekday: "long", month: "long", day: "numeric" });
+  const hour = d.toLocaleTimeString("en-US", { ...zone, hour: "numeric", minute: "2-digit" }).replace(":00", "").replace("AM", "am").replace("PM", "pm");
+  el.innerHTML = "";
+  const a = document.createElement("a");
+  a.href = "/broadcasts/";
+  a.textContent = `Next broadcast: ${day}, ${hour}: ${s.theme}${s.guests ? ", with " + s.guests : ""}`;
+  el.append(a);
+}
+
 async function nowPlaying() {
   try {
     const d = await (await fetch(NOW)).json();
     const live = d.live.is_live;
+    onAir = live;
+    nextBroadcast();
     if (show) { showBack(live); return; }
     const listening = d.listeners.current ? " · " + d.listeners.current + " listening" : "";
     status.innerHTML = live ? ICON.live + " On air" + listening : ICON.library + " From the library" + listening;
@@ -396,6 +416,7 @@ document.addEventListener("astro:page-load", () => {
   for (const a of document.querySelectorAll("a[href^='http']")) {
     if (a.host !== location.host) { a.target = "_blank"; a.rel = "noopener"; }
   }
+  nextBroadcast();
   const el = document.getElementById("map");
   if (el && window.L) {
     map?.remove();

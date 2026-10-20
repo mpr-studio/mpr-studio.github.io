@@ -1,15 +1,9 @@
 ---
 import Base from "../layouts/Base.astro";
-import schedule from "../data/schedule.json";
-import { getCollection, getEntry } from "astro:content";
-const latest = (await getCollection("broadcasts")).sort((a, b) => b.data.number - a.data.number)[0];
-const guest = latest?.data.guest && (await getEntry(latest.data.guest));
 ---
 <Base>
 <h1>Montez Press Radio Studio Radio</h1>
 <p>Montez Press Radio Studio Radio is the online radio station of Montez Press Radio Studio, an option studio taught by APRDELESP at Cornell University's Department of Architecture in the fall of 2026. The studio is designing a new space for <a href="https://radio.montezpress.com">Montez Press Radio</a>, an experimental nonprofit broadcasting and performance platform that has been streaming live from Chinatown, NYC, since 2018, and that is moving from Canal Street to 215 Centre Street, a few blocks away. We started a radio station of our own.</p>
 <p>It will stream live six times this semester: one-hour shows, in which we read and discuss the precedents report, a collection of short illustrated texts the studio wrote about places tied to the project by adjacency: Montez Press Radio and its new neighbors, the jail being built two blocks away, the jail it is replacing, and other spaces and institutions that do something like what Montez Press Radio does. Each show takes one theme from the report and is hosted by the students who wrote about it and is sometimes joined by a guest. The rest of the time, the station plays music from its library.</p>
-<p>{schedule.map((s, i) => (<Fragment><time datetime={s.start}>{s.label}</time>: {s.theme}.{i < schedule.length - 1 && <br />}</Fragment>))}</p>
-<p><a href="/course/">Read more</a></p>
-{latest && <p>Latest: <a href={`/broadcasts/${latest.data.number}/`}>Broadcast {latest.data.number}{guest && `, with ${guest.data.name}`}</a></p>}
+<p id="next-broadcast"></p>
 </Base>
