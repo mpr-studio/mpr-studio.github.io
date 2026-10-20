@@ -1,50 +1,8 @@
-// Pages: show the section that holds the hash target, home otherwise.
-function route() {
-  const id = location.hash.slice(1);
-  const target = id && document.getElementById(id);
-  const page = (target && target.closest(".page")) || document.getElementById("home");
-  for (const p of document.querySelectorAll(".page")) p.hidden = p !== page;
-  for (const a of document.querySelectorAll("nav a")) {
-    const section = page.id.startsWith("broadcast-") ? "broadcasts" : page.id;
-    if (a.hash === (section === "home" ? "" : "#" + section)) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
-  }
-  if (page.id === "course") { map.invalidateSize(); fit(); }
-  if (!target || target === page) scrollTo(0, 0);
-  else target.scrollIntoView();
-}
-
-// Map: the three addresses from the syllabus.
-const places = [
-  [40.7147086, -73.9916872, "46 Canal Street"],
-  [40.7194406, -73.9990778, "215 Centre Street"],
-  [40.7167326, -74.0005831, "125 White Street"],
-];
-const map = L.map("map", { scrollWheelZoom: false });
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  maxZoom: 19,
-}).addTo(map);
-const fit = () => map.fitBounds(places.map(([lat, lon]) => [lat, lon]), { padding: [60, 60] });
-fit();
-for (const [lat, lon, label] of places) {
-  L.circleMarker([lat, lon], { radius: 6, color: "black", weight: 1, fillOpacity: 1 })
-    .bindTooltip(label, { permanent: true, direction: "right" })
-    .addTo(map);
-}
-
-addEventListener("hashchange", route);
-route();
-
-// Links to other sites open in a new tab.
-for (const a of document.querySelectorAll("a[href^='http']")) {
-  if (a.host !== location.host) { a.target = "_blank"; a.rel = "noopener"; }
-}
-
 // Player: always on screen, draggable, with what's playing now.
 const STREAM = "https://167-235-224-167.sslip.io/listen/mpr-studio/radio.mp3";
 const NOW = "https://167-235-224-167.sslip.io/api/nowplaying/mpr-studio";
 const player = document.getElementById("player");
+const schedule = JSON.parse(player.dataset.schedule || "[]");
 const button = document.getElementById("play");
 const status = document.getElementById("status");
 const now = document.getElementById("now");
@@ -161,10 +119,9 @@ addEventListener("load", draw);
 // in words, in New York time.
 function nextShow() {
   const t = Date.now();
-  const time = [...document.querySelectorAll("#home time")]
-    .find((el) => Date.parse(el.dateTime) + 3600e3 > t);
+  const time = schedule.find((s) => Date.parse(s.start) + 3600e3 > t);
   if (!time) return "";
-  const start = Date.parse(time.dateTime);
+  const start = Date.parse(time.start);
   if (start <= t) return "Show starting soon";
   const zone = { timeZone: "America/New_York" };
   const day = (ms) => new Date(new Date(ms).toLocaleDateString("en-US", zone)).getTime();
@@ -373,15 +330,26 @@ function playShow(b, t) {
 audio.addEventListener("ended", () => { if (show) leaveShow(true); });
 
 // Each page's remote, and the floating player's line, follow the audio.
-const broadcasts = [...document.querySelectorAll(".show")].map((el) => ({
-  el,
-  src: el.dataset.src,
-  title: el.dataset.title,
-  theme: el.dataset.theme,
-  duration: Number(el.dataset.duration),
-  pos: Number(stored("pos " + el.dataset.title)) || 0,
-  peaks: [],
-}));
+// Broadcasts are known by their audio URL, so the one playing survives
+// moving between pages; the remotes on the current page rebind on each load.
+const catalog = new Map();
+function broadcast(el) {
+  let b = catalog.get(el.dataset.src);
+  if (!b) {
+    b = {
+      src: el.dataset.src,
+      title: el.dataset.title,
+      theme: el.dataset.theme,
+      duration: Number(el.dataset.duration),
+      pos: Number(stored("pos " + el.dataset.title)) || 0,
+      peaks: [],
+    };
+    catalog.set(b.src, b);
+    fetch(el.dataset.peaks).then((r) => r.json()).then((p) => { b.peaks = p; update(); }).catch(() => {});
+  }
+  return b;
+}
+let remotes = [];
 let lastSave = 0;
 audio.addEventListener("timeupdate", () => {
   if (!show) return;
@@ -391,13 +359,13 @@ audio.addEventListener("timeupdate", () => {
 audio.addEventListener("pause", () => { if (show) savePos(show); });
 function update() {
   if (show) status.textContent = `${show.title} · ${clock(pending ?? audio.currentTime)} / ${clock(duration(show))}`;
-  for (const b of broadcasts) {
+  for (const { el, b } of remotes) {
     const mine = show === b, t = mine ? pending ?? audio.currentTime : b.pos;
-    b.el.querySelector(".show-time").textContent = `${clock(t)} / ${clock(duration(b))}`;
-    const play = b.el.querySelector(".show-play"), on = mine && !audio.paused;
+    el.querySelector(".show-time").textContent = `${clock(t)} / ${clock(duration(b))}`;
+    const play = el.querySelector(".show-play"), on = mine && !audio.paused;
     play.textContent = on ? "❚❚" : "▶";
     play.setAttribute("aria-label", on ? "Pause" : "Play");
-    paintShow(b.el.querySelector(".show-wave"), b, t, "black");
+    paintShow(el.querySelector(".show-wave"), b, t, "black");
   }
   if (show) draw();
 }
@@ -405,21 +373,48 @@ for (const ev of ["timeupdate", "play", "pause", "loadedmetadata", "seeked"]) au
 audio.addEventListener("play", () => setPlaying(true));
 audio.addEventListener("pause", () => setPlaying(false));
 addEventListener("resize", update);
-addEventListener("hashchange", () => requestAnimationFrame(update));
-
-for (const b of broadcasts) {
-  fetch(b.el.dataset.peaks).then((r) => r.json()).then((p) => { b.peaks = p; update(); }).catch(() => {});
-  b.el.querySelector(".show-play").onclick = () => {
-    if (show === b && !audio.paused) audio.pause();
-    else playShow(b);
-  };
-  b.el.querySelector(".show-wave").onclick = (e) =>
-    playShow(b, e.offsetX / e.currentTarget.clientWidth * duration(b));
-  for (const c of b.el.closest(".page").querySelectorAll(".chapters [data-t]")) {
-    c.onclick = () => playShow(b, Number(c.dataset.t));
-  }
-}
 wave.addEventListener("click", (e) => {
   if (show) seek(e.offsetX / wave.clientWidth * duration(show));
 });
-update();
+
+// On every page: bind the broadcast remotes and chapters, open outside
+// links in a new tab, and draw the course map if there is one.
+let map = null;
+document.addEventListener("astro:page-load", () => {
+  remotes = [...document.querySelectorAll("main .show")].map((el) => ({ el, b: broadcast(el) }));
+  for (const { el, b } of remotes) {
+    el.querySelector(".show-play").onclick = () => {
+      if (show === b && !audio.paused) audio.pause();
+      else playShow(b);
+    };
+    el.querySelector(".show-wave").onclick = (e) =>
+      playShow(b, e.offsetX / e.currentTarget.clientWidth * duration(b));
+    for (const c of document.querySelectorAll("main .chapters [data-t]")) {
+      c.onclick = () => playShow(b, Number(c.dataset.t));
+    }
+  }
+  for (const a of document.querySelectorAll("a[href^='http']")) {
+    if (a.host !== location.host) { a.target = "_blank"; a.rel = "noopener"; }
+  }
+  const el = document.getElementById("map");
+  if (el && window.L) {
+    map?.remove();
+    const places = [
+      [40.7147086, -73.9916872, "46 Canal Street"],
+      [40.7194406, -73.9990778, "215 Centre Street"],
+      [40.7167326, -74.0005831, "125 White Street"],
+    ];
+    map = L.map(el, { scrollWheelZoom: false });
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+    map.fitBounds(places.map(([lat, lon]) => [lat, lon]), { padding: [60, 60] });
+    for (const [lat, lon, label] of places) {
+      L.circleMarker([lat, lon], { radius: 6, color: "black", weight: 1, fillOpacity: 1 })
+        .bindTooltip(label, { permanent: true, direction: "right" })
+        .addTo(map);
+    }
+  }
+  update();
+});

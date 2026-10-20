@@ -1,0 +1,55 @@
+---
+import { ClientRouter } from "astro:transitions";
+import "../styles/style.css";
+import schedule from "../data/schedule.json";
+
+interface Props { title?: string }
+const { title } = Astro.props;
+const path = Astro.url.pathname;
+const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith("/course") ? "course" : "radio";
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title ? `${title} · Montez Press Radio Studio` : "Montez Press Radio Studio"}</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script is:inline>
+  // Old addresses (#course, #broadcasts, #broadcast-1) go to their pages.
+  (function () {
+    var h = location.hash, m = h.match(/^#broadcast-(\d+)$/);
+    var to = h === "#course" ? "/course/" : h === "#broadcasts" ? "/broadcasts/" : m ? "/broadcasts/" + m[1] + "/" : null;
+    if (to) location.replace(to);
+  })();
+</script>
+<ClientRouter />
+</head>
+<body>
+
+<header>
+<a href="/">Montez Press Radio Studio</a>
+<nav><a href="/" aria-current={section === "radio" ? "page" : undefined}>Radio</a> <a href="/broadcasts/" aria-current={section === "broadcasts" ? "page" : undefined}>Broadcasts</a> <a href="/course/" aria-current={section === "course" ? "page" : undefined}>Course</a></nav>
+</header>
+
+<main>
+<slot />
+</main>
+
+<div id="player" transition:persist data-schedule={JSON.stringify(schedule)}>
+<button id="play" type="button" aria-label="Play">▶</button>
+<div>
+<p id="status"></p>
+<canvas id="wave"></canvas>
+</div>
+<p id="now"></p>
+<p id="next"></p>
+<p id="resume"></p>
+<p id="vol"><button id="mute" type="button" aria-label="Mute"><svg viewBox="0 0 16 16" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 6h3l4-3v10l-4-3h-3z" fill="currentColor" stroke="none"/><path class="on" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6.5 6.5 0 0 1 0 9"/><path class="off" d="M10.5 6l4 4M14.5 6l-4 4"/></svg></button><input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume"></p>
+</div>
+
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="../scripts/player.js"></script>
+</body>
+</html>

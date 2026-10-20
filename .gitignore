@@ -1,1 +1,4 @@
 _test/
+node_modules/
+dist/
+.astro/

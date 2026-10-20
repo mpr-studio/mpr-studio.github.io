@@ -1,72 +1,7 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Montez Press Radio Studio</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header>
-<a href="#">Montez Press Radio Studio</a>
-<nav><a href="#">Radio</a> <a href="#broadcasts">Broadcasts</a> <a href="#course">Course</a></nav>
-</header>
-
-<main>
-<section class="page" id="home">
-<h1>Montez Press Radio Studio Radio</h1>
-<p>Montez Press Radio Studio Radio is the online radio station of Montez Press Radio Studio, an option studio taught by APRDELESP at Cornell University's Department of Architecture in the fall of 2026. The studio is designing a new space for <a href="https://radio.montezpress.com">Montez Press Radio</a>, an experimental nonprofit broadcasting and performance platform that has been streaming live from Chinatown, NYC, since 2018, and that is moving from Canal Street to 215 Centre Street, a few blocks away. We started a radio station of our own.</p>
-<p>It will stream live six times this semester: one-hour shows, in which we read and discuss the precedents report, a collection of short illustrated texts the studio wrote about places tied to the project by adjacency: Montez Press Radio and its new neighbors, the jail being built two blocks away, the jail it is replacing, and other spaces and institutions that do something like what Montez Press Radio does. Each show takes one theme from the report and is hosted by the students who wrote about it and is sometimes joined by a guest. The rest of the time, the station plays music from its library.</p>
-<p><time datetime="2026-10-16T13:00-04:00">Fri 10/16, 1 pm</time>: Architectural discourse.<br>
-<time datetime="2026-10-22T13:00-04:00">Thu 10/22, 1 pm</time>: Chinatown.<br>
-<time datetime="2026-11-06T13:00-05:00">Fri 11/6, 1 pm</time>: Incarceration.<br>
-<time datetime="2026-11-13T13:00-05:00">Fri 11/13, 1 pm</time>: Land value and gentrification.<br>
-<time datetime="2026-11-20T13:00-05:00">Fri 11/20, 1 pm</time>: Cultural institutions.<br>
-<time datetime="2026-12-04T13:00-05:00">Fri 12/4, 1 pm</time>: Media.</p>
-<p><a href="#course">Read more</a></p>
-<p>Latest: <a href="#broadcast-1">Broadcast 1, with Julian Escudero Geltman</a></p>
-</section>
-
-<section class="page" id="broadcasts" hidden>
-<h1>Broadcasts</h1>
-<ol class="broadcasts">
-<li><a href="#broadcast-1">Broadcast 1</a>, <time datetime="2026-10-16">October 16, 2026</time>: Architectural discourse, with Julian Escudero Geltman</li>
-</ol>
-</section>
-
-<section class="page" id="broadcast-1" hidden>
-<h1>Broadcast 1: Architectural discourse</h1>
-<p><time datetime="2026-10-16T13:00-04:00">Friday, October 16, 2026</time>, <span class="length">56 minutes</span></p>
-<div class="show" data-src="https://mpr-studio.github.io/broadcasts/broadcast-1.mp3" data-peaks="broadcasts/broadcast-1.json" data-duration="3376" data-title="Broadcast 1" data-theme="Architectural discourse">
-<button class="show-play" type="button" aria-label="Play">▶</button>
-<div>
-<p class="show-time">0:00 / 56:16</p>
-<canvas class="show-wave"></canvas>
-</div>
-</div>
-<p>Hosted by Dan Girgis and Rodrigo Escandón Cesarman. Guest: Julian Escudero Geltman.</p>
-<p>Dan Girgis reads his vignette from the precedents report, “A Critical Look at Architectural Critique Today.” With guest Julian Escudero Geltman, co-producer of the podcast <em>I Would Prefer Not To</em>, Dan and Rodrigo Escandón Cesarman discuss how much of the lament for the public architecture critic is nostalgia, compare newspapers with social media platforms, and talk about the <em>New York Review of Architecture</em>, post-literacy, the turn to research and autonomy, and how much of an architect’s work is negotiating with institutions. The show closes with a recording of Jane Jacobs on writing.</p>
-<h2>Chapters</h2>
-<ol class="chapters">
-<li><button type="button" data-t="0">0:00</button> Introduction: the station and the guests</li>
-<li><button type="button" data-t="348">5:48</button> Dan reads “A Critical Look at Architectural Critique Today”</li>
-<li><button type="button" data-t="948">15:48</button> Nostalgia and the institutions of critique</li>
-<li><button type="button" data-t="1555">25:55</button> Does anyone talk about buildings now?</li>
-<li><button type="button" data-t="1783">29:43</button> Letters to the editor and NYRA</li>
-<li><button type="button" data-t="2026">33:46</button> Post-literacy and the case for text</li>
-<li><button type="button" data-t="2256">37:36</button> Research, autonomy, and the architect’s agency</li>
-<li><button type="button" data-t="2489">41:29</button> What architects actually do</li>
-<li><button type="button" data-t="3038">50:38</button> Architects as politicians</li>
-<li><button type="button" data-t="3121">52:01</button> Jane Jacobs: “On Writing”</li>
-</ol>
-<h2>Guest</h2>
-<p>Julian Escudero Geltman is a Brooklyn-based podcaster. He is also an architectural designer, critic and educator. He studied environmental studies at Oberlin College (2017) and architecture at MIT (MArch, 2023). Along with Ana Miljački, he co-produces <a href="https://archleague.org/project/i-would-prefer-not-to/"><em>I Would Prefer Not To</em></a>, a podcast from MIT’s Critical Broadcasting Lab and the Architectural League of New York in which architects talk about the commissions they turned down, and which won the 2025 AIA Architecture in Media Award. He is a co-founding principal of <a href="https://www.instagram.com/ago.nyc/">AGONY</a>, Architecture Group of New York.</p>
-<p><a class="download" href="https://mpr-studio.github.io/broadcasts/broadcast-1.mp3" download>Download (MP3)</a></p>
-</section>
-
-<section class="page" id="course" hidden>
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="Course">
 <h1>Montez Press Radio Studio</h1>
 <p>Fall 2026 Option Studio<br />
 ARCH 4101/4102, 5101, 5115/5116, 7112/7113 · Section 505<br />
@@ -87,17 +22,17 @@ Final review: Wednesday, December 9 (department Option Studio review day)<br />
 </figure>
 <p><a href="https://radio.montezpress.com">Montez Press Radio</a> (MPR) is an experimental nonprofit broadcasting and performance platform founded by three members of the publishing house Montez Press: Anna Clark, Stacy Skolnik, and Thomas Laprade. They have been streaming live from Chinatown, NYC, since 2018. Every event streamed live from the studio is free and open to the public, and they also have people programming in London and Mexico City, streaming every month or so from a different venue each time. In an era of social media and podcasts and Twitch streams — often recorded alone, clipped for virality and distributed by algorithm — MPR insists on live radio: communal, unedited, and in person. For the city’s artists and writers, it has become an alternative to an art world and a media landscape they have grown disillusioned with: a winner-take-all market in which a few artists absorb most of the money and attention, a fierce competition for the grants, residencies, and prestige everyone else is left to live on, the constant self-promotion that social media demands, and a city where the cheap rent and day jobs that once let artists simply make work have disappeared. MPR has no owners or advertisers to answer to, so hosts are free to be as edgy or esoteric as they like. And because everything is recorded, the station has also become an ever-growing archive of the underground scenes that pass through it: a record of downtown now (and Mexico City and London), made by everyone who is willing to talk.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
 <figure>
-<div class="row" style="--cols: 4; --ratio: 3 / 2"><img src="images/old-space-1.jpg" alt=""><img src="images/old-space-2.jpg" alt=""><img src="images/old-space-3.jpg" alt=""><img src="images/old-space-4.jpg" alt=""></div>
+<div class="row" style="--cols: 4; --ratio: 3 / 2"><img src="/images/old-space-1.jpg" alt=""><img src="/images/old-space-2.jpg" alt=""><img src="/images/old-space-3.jpg" alt=""><img src="/images/old-space-4.jpg" alt=""></div>
 <figcaption>The current space at 46 Canal Street in use. Courtesy Montez Press Radio; third image: Alec Castillo for The New York Times; fourth: Taylor Ervin.</figcaption>
 </figure>
 <p>MPR is also moving from its current location, above a skate shop on Canal Street, to <a href="https://maps.google.com/?q=215+Centre+St,+New+York,+NY">215 Centre Street</a>, a few blocks away, where it will occupy part of the fifth floor (about 3,600 sq ft). This new building has been the home of the <a href="https://www.mocanyc.org">Museum of Chinese in America</a> (MOCA) since 2009, in a space designed by Maya Lin, and the museum is turning it into its permanent home. Along with MPR and MOCA, the building will host several other cultural institutions: <a href="https://blankforms.org">Blank Forms</a>, a nonprofit devoted to experimental and creative music, producing performances, books, records, and artists’ archives; <a href="https://carriagetrade.org">carriage trade</a>, a nonprofit gallery whose group exhibitions read art against its social and political context; <a href="https://citygroup.nyc">CITYGROUP</a>, an architecture collective that runs a storefront space on Forsyth Street, on the Lower East Side, and questions how architecture is normally practiced; and <a href="https://www.timesny.org/">times</a>, a new nonprofit arts center for experimental, time-based projects, planned to run for only three years.</p>
 <figure>
-<div class="row" style="--cols: 2; --ratio: 1"><img src="images/46-canal-streetview.jpg" alt=""><img src="images/215-centre-streetview.jpg" alt=""></div>
+<div class="row" style="--cols: 2; --ratio: 1"><img src="/images/46-canal-streetview.jpg" alt=""><img src="/images/215-centre-streetview.jpg" alt=""></div>
 <figcaption>The two homes, from the street: left, 46 Canal Street; right, 215 Centre Street. Images © Google Street View, 2026 / 2024.</figcaption>
 </figure>
 <p>The building sits in a part of Chinatown that is changing fast and where new tenants and long-standing communities are negotiating what the neighborhood will become. Two blocks away, on the site of the demolished Tombs, the city is building the new Manhattan Detention Center as part of its effort to close Rikers Island. At roughly 300 feet, it will be the tallest jail in the world.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> The neighborhood fought it for years. Neighbors United Below Canal (NUBC), a coalition of residents, businesses, and organizations from the blocks south of Canal Street, sued the city: a judge annulled the project’s approvals in 2020, and an appeals court reinstated them the next year.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> There have been protests over the years, and there still are.<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> There have also been alternative proposals from the community: in 2025, NUBC, Welcome to Chinatown, and the architects Ideas of Order proposed moving the jail into the vacant federal jail nearby and putting 1,040 deeply affordable homes on the site instead.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> Construction went ahead anyway in January 2026,<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> and the budget has grown to nearly $3.8 billion; the jail is expected to be finished around 2032.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
 <figure>
-<div class="row" style="--cols: 2"><img src="images/jail/tombs-1896.jpg" alt=""><img src="images/jail/mdc-2022.jpg" alt=""><img src="images/jail/mdc-proposal-render.jpg" alt=""><img src="images/jail/alt-plan-render.jpg" alt=""></div>
+<div class="row" style="--cols: 2"><img src="/images/jail/tombs-1896.jpg" alt=""><img src="/images/jail/mdc-2022.jpg" alt=""><img src="/images/jail/mdc-proposal-render.jpg" alt=""><img src="/images/jail/alt-plan-render.jpg" alt=""></div>
 <figcaption>The block at 125 White Street, four moments: the Tombs — the 1838 Halls of Justice by John Haviland, the first of the successive jails the neighborhood has known — photographed c. 1896 (Library of Congress); the Manhattan Detention Complex, closed and awaiting demolition, December 2022 (Kidfly182, CC BY-SA 4.0, via Wikimedia Commons); the Manhattan Detention Center as proposed (NYC DDC preliminary design rendering, 2025, via New York YIMBY); and the community’s alternative, 1,040 affordable homes on the same site (Ideas of Order / NUBC / Welcome to Chinatown, 2025).</figcaption>
 </figure>
 <p>MOCA’s presence here is not new. Founded in 1980 as the New York Chinatown History Project, the museum spent its first decades at 70 Mulberry Street and moved into 215 Centre Street in 2009,<a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> but its purchase of the building has not been without controversy. The museum has been criticized for accepting $35 million from the city: a “community give-back” negotiated between 2018 and 2019 as part of the political deal that approved the jail, and the money behind the museum’s purchase of the building.<a href="#fn9" class="footnote-ref" id="fnref9" role="doc-noteref"><sup>9</sup></a> Activist groups called it “jail money,” picketed the museum, and called for a boycott.<a href="#fn10" class="footnote-ref" id="fnref10" role="doc-noteref"><sup>10</sup></a></p>
@@ -106,7 +41,7 @@ Final review: Wednesday, December 9 (department Option Studio review day)<br />
 <hr />
 <p>The studio will begin with a collective precedents report. Each student will research at least one case study: a space or an institution tied to ours by adjacency — political or economic adjacency to the jail, spatial adjacency to the new building, thematic adjacency to what MPR does; the jail itself, the jails it is replacing, MPR and its neighbors themselves. Each case will be written as a vignette: a short, illustrated text (200–500 words) with maps, floor plans, and other images.<a href="#fn11" class="footnote-ref" id="fnref11" role="doc-noteref"><sup>11</sup></a> The vignettes will be edited together into a single report. Out of these precedents we hope to find patterns and types, but instead of making a main thesis or providing a singular argument for the project, the report will serve as a set of characters that we can refer to as we think through the design, both within the studio and with guests. From week 8, the report goes on air: a live show, most weeks, in which the vignettes are read, discussed with the public and with guests, and brought back to the projects.</p>
 <figure>
-<div class="row" style="--cols: 2; --ratio: 1200 / 784"><img src="images/parques-report-video.jpg" alt=""><img src="images/parques-report-site.jpg" alt=""></div>
+<div class="row" style="--cols: 2; --ratio: 1200 / 784"><img src="/images/parques-report-video.jpg" alt=""><img src="/images/parques-report-site.jpg" alt=""></div>
 <figcaption>APRDELESP’s <a href="https://parques.aprdelesp.com/reporte">precedents report for Parques</a> — the format model for the vignettes: a case with its video (left) and the overview map of cases (right).</figcaption>
 </figure>
 <p>For the architectural project, we will use a methodology developed, tested, and constantly updated by APRDELESP. We will use architectural drawings as the workspace where the dialogue between everyone involved in a design process takes place. In practice, this means three things. We will expand as much as possible the universe of objects we draw: not only the objects conventionally considered “architectural,” such as walls, ceilings, or floors, but also the furniture, the belongings, and the inhabitants. We will distinguish existing, proposed, and suggested objects with a color code. And we will treat each drawing as the latest iteration of a continuously updated document, not as material made for marketing or exhibition. The project becomes the result of a conversation around social dynamics and material conditions, both existing and proposed: the drawing becomes a relationship rather than an object.</p>
@@ -126,22 +61,4 @@ Final review: Wednesday, December 9 (department Option Studio review day)<br />
 <li id="fn11"><p>For examples, see APRDELESP’s <a href="https://parques.aprdelesp.com/reporte">precedents report for Parques</a> and the notes series at <a href="https://aprdelesp.com">aprdelesp.com</a>: <a href="https://aprdelesp.com/wp-content/uploads/2012/12/Notes-on-the-White-Plastic-Chair-v.-1.0.0.pdf">Notes on the White Plastic Chair</a> (with <a href="https://www.youtube.com/watch?v=v0HQL00y0bo">a movie version</a>), <a href="https://aprdelesp.com/wp-content/uploads/2012/12/Notes-on-Winnie-the-Pooh%E2%80%99s-house-tree.pdf">Notes on Winnie-the-Pooh’s house-tree</a>, and <a href="https://aprdelesp.com/wp-content/uploads/2012/12/Notes-on-Ease.pdf">Notes on Ease</a>.<a href="#fnref11" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
-</section>
-</main>
-
-<div id="player">
-<button id="play" type="button" aria-label="Play">▶</button>
-<div>
-<p id="status"></p>
-<canvas id="wave"></canvas>
-</div>
-<p id="now"></p>
-<p id="next"></p>
-<p id="resume"></p>
-<p id="vol"><button id="mute" type="button" aria-label="Mute"><svg viewBox="0 0 16 16" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 6h3l4-3v10l-4-3h-3z" fill="currentColor" stroke="none"/><path class="on" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6.5 6.5 0 0 1 0 9"/><path class="off" d="M10.5 6l4 4M14.5 6l-4 4"/></svg></button><input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume"></p>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="site.js"></script>
-</body>
-</html>
+</Base>

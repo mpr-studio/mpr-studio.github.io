@@ -1,0 +1,15 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection, getEntry } from "astro:content";
+const list = (await getCollection("broadcasts")).sort((a, b) => b.data.number - a.data.number);
+const guests = await Promise.all(list.map((b) => (b.data.guest ? getEntry(b.data.guest) : null)));
+const day = (d: Date) => d.toLocaleDateString("en-US", { timeZone: "America/New_York", month: "long", day: "numeric", year: "numeric" });
+---
+<Base title="Broadcasts">
+<h1>Broadcasts</h1>
+<ol class="broadcasts" reversed>
+{list.map((b, i) => (
+  <li><a href={`/broadcasts/${b.data.number}/`}>Broadcast {b.data.number}</a>, <time datetime={b.data.date.toISOString()}>{day(b.data.date)}</time>: {b.data.theme}{guests[i] && `, with ${guests[i].data.name}`}</li>
+))}
+</ol>
+</Base>
