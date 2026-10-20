@@ -29,6 +29,7 @@ const archive = await Promise.all(all.filter(({ b }) => aired(b)).reverse().map(
         <Remote b={b} />
         {b.data.hosts.length > 0 && <p>Hosted by {and(b.data.hosts)}.</p>}
         <Content />
+        <p><a href={url(b)}>Read more</a></p>
       </article>
     ))}
   </Fragment>
