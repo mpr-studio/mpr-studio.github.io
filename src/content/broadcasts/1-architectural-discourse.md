@@ -10,7 +10,7 @@ guests: [julian-escudero-geltman]
 chapters:
   - { time: "0:00", title: "Introduction: the station and the guests" }
   - { time: "5:48", title: "Dan reads “A Critical Look at Architectural Critique Today”" }
-  - { time: "15:48", title: "Nostalgia and the institutions of critique" }
+  - { time: "15:48", title: "Nostalgia, and what mediates the discourse" }
   - { time: "25:55", title: "Does anyone talk about buildings now?" }
   - { time: "29:43", title: "Letters to the editor and NYRA" }
   - { time: "33:46", title: "Post-literacy and the case for text" }
