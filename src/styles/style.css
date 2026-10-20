@@ -161,8 +161,10 @@ sup { line-height: 0; }
 
 /* The floating player playing a broadcast. */
 #player.archive #wave { cursor: pointer; }
-#next a, #resume a { text-decoration: none; }
-#resume:empty { display: none; }
+#source:empty { display: none; }
+#source button { font: inherit; padding: 0; color: inherit; background: none; border: 0; cursor: pointer; }
+#source button[aria-pressed="true"] { text-decoration: underline; }
+#source button.live { color: #e10600; }
 #next a.live { color: #e10600; }
 
 /* Phones: a full-width bar along the bottom, not draggable. */

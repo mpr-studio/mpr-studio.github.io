@@ -184,7 +184,8 @@ async function nowPlaying() {
     const live = d.live.is_live;
     onAir = live;
     nextBroadcast();
-    if (show) { showBack(live); return; }
+    showSource();
+    if (show) return;
     const listening = d.listeners.current ? " · " + d.listeners.current + " listening" : "";
     status.innerHTML = live ? ICON.live + " On air" + listening : ICON.library + " From the library" + listening;
     status.className = live ? "live" : "";
@@ -199,7 +200,9 @@ async function nowPlaying() {
       });
     }
   } catch {
-    if (show) { showBack(false); return; }
+    onAir = false;
+    showSource();
+    if (show) return;
     status.textContent = "Off air";
     status.className = "";
     setNow("");
@@ -271,49 +274,68 @@ function paintShow(canvas, b, time, color) {
     g.fillRect(x, (h - y) / 2, 1.5 * dpr, y);
   }
 }
+// The player has two sources: the live stream and one broadcast from the
+// archive (the last one you played, remembered between visits). A line at the
+// bottom switches between them: "Live · Broadcast 1". Switching keeps the
+// state: if something was playing, the other source starts playing (live at
+// the live edge, a broadcast where you left it); if not, it just switches.
+// Clicking a waveform only moves the position; ▶ and the chapters play.
 const next = document.getElementById("next");
-function showBack(live) {
-  next.innerHTML = live ? '<a href="#" class="back live">On air now: back to live</a>' : '<a href="#" class="back">← Back to live</a>';
+const source = document.getElementById("source");
+let last = null;  // the archive source
+function showSource() {
+  source.innerHTML = "";
+  if (!last) return;
+  const make = (label, target, live) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.setAttribute("aria-pressed", String(show === target));
+    if (live && onAir) button.className = "live";
+    button.onclick = () => switchTo(target);
+    return button;
+  };
+  source.append(make(onAir ? "On air" : "Live", null, true), " · ", make(last.title, last));
 }
-next.addEventListener("click", (e) => {
-  if (!e.target.closest(".back")) return;
-  e.preventDefault();
-  leaveShow();
-  toggle();  // play live
-});
-let last = null;  // the broadcast you left for live, to go back to
-const resume = document.getElementById("resume");
-function showResume() {
-  resume.innerHTML = "";
-  if (show || !last) return;
-  const a = document.createElement("a");
-  a.href = "#";
-  a.textContent = `→ ${last.title}, ${clock(last.pos)}`;
-  resume.append(a);
-}
-resume.addEventListener("click", (e) => {
-  if (!e.target.closest("a")) return;
-  e.preventDefault();
-  if (!audio.paused) toggle();  // stop the live stream
-  playShow(last);
-});
 function savePos(b) { store("pos " + b.title, String(Math.floor(b.pos))); }
-function leaveShow(finished) {
-  if (!show) return;
+function remember(b) {
+  last = b;
+  store("last", JSON.stringify({ src: b.src, title: b.title, theme: b.theme, duration: b.duration, peaks: b.peaksUrl }));
+}
+function switchTo(target, { play } = {}) {
+  if (target === show) return;
+  const playing = play ?? !audio.paused;
+  if (show) {  // leave the broadcast, keeping its place
+    show.pos = pending ?? audio.currentTime;
+    savePos(show);
+  }
   audio.pause();
-  show.pos = finished ? 0 : (pending ?? audio.currentTime);
-  savePos(show);
-  last = finished ? null : show;
-  show = null;
-  audio.removeAttribute("src");
-  audio.load();
-  player.classList.remove("archive");
-  nowText = null;
+  pending = null;
+  show = target;
+  if (show) {
+    remember(show);
+    audio.src = show.src;
+    if (show.pos < duration(show) - 5) seek(show.pos);
+    player.classList.add("archive");
+    status.className = "";
+    setNow(null);
+    now.textContent = show.theme;
+    next.textContent = "";
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: show.title + ": " + show.theme, artist: "Montez Press Radio Studio Radio" });
+    }
+  } else {
+    audio.removeAttribute("src");
+    audio.load();
+    player.classList.remove("archive");
+    nowText = null;
+    nowPlaying();
+  }
   setPlaying(false);
-  showResume();
+  showSource();
   update();
-  nowPlaying();
   draw();
+  if (playing) toggle();
 }
 let pending = null;
 function seek(t) {
@@ -325,50 +347,32 @@ audio.addEventListener("loadedmetadata", () => {
   if (pending !== null && show) { audio.currentTime = pending; pending = null; }
 });
 function playShow(b, t) {
-  if (t == null && show !== b && b.pos < duration(b) - 5) t = b.pos;  // resume where you left it
-  if (show !== b) {
-    audio.pause();
-    show = b;
-    pending = null;
-    audio.src = b.src;
-    player.classList.add("archive");
-    resume.innerHTML = "";
-    status.className = "";
-    setNow(null);
-    now.textContent = b.theme;
-    showBack(false);
-    nowPlaying();
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: b.title + ": " + b.theme, artist: "Montez Press Radio Studio Radio" });
-    }
-  }
+  if (show !== b) switchTo(b, { play: false });
   if (t != null) seek(t);
-  connect();
-  gain?.context.resume();
-  audio.play().catch(() => setPlaying(false));
+  if (audio.paused) toggle();
 }
-audio.addEventListener("ended", () => { if (show) leaveShow(true); });
+audio.addEventListener("ended", () => {
+  if (!show) return;
+  show.pos = 0;
+  savePos(show);
+  switchTo(null, { play: false });
+});
 
 // Each page's remote, and the floating player's line, follow the audio.
 // Broadcasts are known by their audio URL, so the one playing survives
 // moving between pages; the remotes on the current page rebind on each load.
 const catalog = new Map();
-function broadcast(el) {
-  let b = catalog.get(el.dataset.src);
+function known({ src, title, theme, duration, peaks }) {
+  let b = catalog.get(src);
   if (!b) {
-    b = {
-      src: el.dataset.src,
-      title: el.dataset.title,
-      theme: el.dataset.theme,
-      duration: Number(el.dataset.duration),
-      pos: Number(stored("pos " + el.dataset.title)) || 0,
-      peaks: [],
-    };
-    catalog.set(b.src, b);
-    fetch(el.dataset.peaks).then((r) => r.json()).then((p) => { b.peaks = p; update(); }).catch(() => {});
+    b = { src, title, theme, duration: Number(duration), peaksUrl: peaks, pos: Number(stored("pos " + title)) || 0, peaks: [] };
+    catalog.set(src, b);
+    fetch(peaks).then((r) => r.json()).then((p) => { b.peaks = p; update(); }).catch(() => {});
   }
   return b;
 }
+const broadcast = (el) => known(el.dataset);
+try { const m = JSON.parse(stored("last")); if (m) last = known(m); } catch {}
 let remotes = [];
 let lastSave = 0;
 audio.addEventListener("timeupdate", () => {
@@ -407,8 +411,11 @@ document.addEventListener("astro:page-load", () => {
       if (show === b && !audio.paused) audio.pause();
       else playShow(b);
     };
-    el.querySelector(".show-wave").onclick = (e) =>
-      playShow(b, e.offsetX / e.currentTarget.clientWidth * duration(b));
+    el.querySelector(".show-wave").onclick = (e) => {
+      const t = e.offsetX / e.currentTarget.clientWidth * duration(b);
+      if (show === b) seek(t);
+      else { b.pos = t; savePos(b); update(); }
+    };
     for (const c of document.querySelectorAll("main .chapters [data-t]")) {
       c.onclick = () => playShow(b, Number(c.dataset.t));
     }
@@ -417,6 +424,7 @@ document.addEventListener("astro:page-load", () => {
     if (a.host !== location.host) { a.target = "_blank"; a.rel = "noopener"; }
   }
   nextBroadcast();
+  showSource();
   const el = document.getElementById("map");
   if (el && window.L) {
     map?.remove();
