@@ -2,6 +2,8 @@
 const STREAM = "https://167-235-224-167.sslip.io/listen/mpr-studio/radio.mp3";
 const NOW = "https://167-235-224-167.sslip.io/api/nowplaying/mpr-studio";
 const player = document.getElementById("player");
+const source = document.getElementById("source");
+const back = document.getElementById("back");
 const schedule = JSON.parse(player.dataset.schedule || "[]");
 const button = document.getElementById("play");
 const status = document.getElementById("status");
@@ -143,7 +145,7 @@ function setNow(text) {
   now.textContent = "";
   if (!text) return;
   const span = document.createElement("span");
-  span.textContent = "Now playing: " + text;
+  span.textContent = text;
   now.append(span);
   now.classList.remove("marquee");
   if (span.offsetWidth > now.clientWidth) {
@@ -190,11 +192,11 @@ async function nowPlaying() {
     status.innerHTML = live ? ICON.live + " On air" + listening : ICON.library + " From the library" + listening;
     status.className = live ? "live" : "";
     const song = d.now_playing.song;
-    setNow(live ? d.live.streamer_name || song.text : song.text);
-    document.getElementById("next").textContent = live ? "" : nextShow();
+    const playing = live ? d.live.streamer_name || song.text : song.text;
+    setNow(["Now playing: " + playing, live ? "" : nextShow()].filter(Boolean).join(" · "));
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: nowText,
+        title: playing,
         artist: "Montez Press Radio Studio Radio",
         artwork: song.art ? [{ src: song.art }] : [],
       });
@@ -205,8 +207,7 @@ async function nowPlaying() {
     if (show) return;
     status.textContent = "Off air";
     status.className = "";
-    setNow("");
-    document.getElementById("next").textContent = nextShow();
+    setNow(nextShow());
   }
 }
 nowPlaying();
@@ -274,33 +275,25 @@ function paintShow(canvas, b, time, color) {
     g.fillRect(x, (h - y) / 2, 1.5 * dpr, y);
   }
 }
-// The player has two sources: the live stream and one broadcast from the
-// archive (the last one you played, remembered between visits). A line at the
-// bottom switches between them: "Live · Broadcast 1". Switching keeps the
-// state: if something was playing, the other source starts playing (live at
-// the live edge, a broadcast where you left it); if not, it just switches.
-// Clicking a waveform only moves the position; ▶ and the chapters play.
-const next = document.getElementById("next");
-const source = document.getElementById("source");
-let last = null;  // the archive source
+// The player's sources: the live stream and every broadcast in the archive,
+// in a dropdown ("Live", "Broadcast 1: Architectural discourse", ...). On a
+// broadcast, "← Live" goes back. Switching keeps the state: if something was
+// playing, the new source starts playing (live at the live edge, a broadcast
+// where you left it); if not, it just switches. Clicking a waveform only
+// moves the position; ▶ and the chapters play.
+let last = null;  // the last broadcast played, remembered between visits
 function showSource() {
-  source.innerHTML = "";
-  if (!last) return;
-  const make = (label, target, live) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.setAttribute("aria-pressed", String(show === target));
-    if (live && onAir) button.className = "live";
-    button.onclick = () => switchTo(target);
-    return button;
-  };
-  source.append(make(onAir ? "On air" : "Live", null, true), " · ", make(last.title, last));
+  source.value = show ? show.src : "";
+  source.options[0].textContent = onAir ? "Live: on air" : "Live";
+  back.hidden = !show;
+  back.classList.toggle("live", onAir);
 }
+source.addEventListener("change", () => switchTo(source.value ? catalog.get(source.value) : null));
+back.addEventListener("click", () => switchTo(null));
 function savePos(b) { store("pos " + b.title, String(Math.floor(b.pos))); }
 function remember(b) {
   last = b;
-  store("last", JSON.stringify({ src: b.src, title: b.title, theme: b.theme, duration: b.duration, peaks: b.peaksUrl }));
+  store("last", b.src);
 }
 function switchTo(target, { play } = {}) {
   if (target === show) return;
@@ -318,9 +311,8 @@ function switchTo(target, { play } = {}) {
     if (show.pos < duration(show) - 5) seek(show.pos);
     player.classList.add("archive");
     status.className = "";
-    setNow(null);
-    now.textContent = show.theme;
-    next.textContent = "";
+    nowText = null;
+    setNow([show.theme, show.guests && "with " + show.guests].filter(Boolean).join(" · "));
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({ title: show.title + ": " + show.theme, artist: "Montez Press Radio Studio Radio" });
     }
@@ -362,17 +354,21 @@ audio.addEventListener("ended", () => {
 // Broadcasts are known by their audio URL, so the one playing survives
 // moving between pages; the remotes on the current page rebind on each load.
 const catalog = new Map();
-function known({ src, title, theme, duration, peaks }) {
+function known({ src, title, theme, guests, duration, peaks }) {
   let b = catalog.get(src);
   if (!b) {
-    b = { src, title, theme, duration: Number(duration), peaksUrl: peaks, pos: Number(stored("pos " + title)) || 0, peaks: [] };
+    b = { src, title, theme, guests, duration: Number(duration), peaksUrl: peaks, pos: Number(stored("pos " + title)) || 0, peaks: [] };
     catalog.set(src, b);
     fetch(peaks).then((r) => r.json()).then((p) => { b.peaks = p; update(); }).catch(() => {});
   }
   return b;
 }
-const broadcast = (el) => known(el.dataset);
-try { const m = JSON.parse(stored("last")); if (m) last = known(m); } catch {}
+const broadcast = (el) => catalog.get(el.dataset.src) ?? known(el.dataset);
+for (const m of JSON.parse(player.dataset.broadcasts || "[]")) {
+  known(m);
+  source.add(new Option(`${m.title}: ${m.theme}`, m.src));
+}
+last = catalog.get(stored("last")) ?? null;
 let remotes = [];
 let lastSave = 0;
 audio.addEventListener("timeupdate", () => {

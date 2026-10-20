@@ -4,6 +4,7 @@ import "../styles/style.css";
 import { broadcasts, and } from "../lib/broadcasts";
 const all = await broadcasts();
 const slugs = Object.fromEntries(all.map(({ b }) => [b.data.number, b.id]));
+const archive = all.filter(({ b }) => b.data.audio).map(({ b, guests }) => ({ src: b.data.audio, title: `Broadcast ${b.data.number}`, theme: b.data.theme, guests: and(guests), duration: b.data.duration, peaks: b.data.peaks }));
 const schedule = all.map(({ b, guests }) => ({ start: b.data.date.toISOString(), theme: b.data.theme, guests: and(guests), aired: Boolean(b.data.audio) }));
 
 interface Props { title?: string }
@@ -40,15 +41,14 @@ const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith(
 <slot />
 </main>
 
-<div id="player" transition:persist data-schedule={JSON.stringify(schedule)}>
+<div id="player" transition:persist data-schedule={JSON.stringify(schedule)} data-broadcasts={JSON.stringify(archive)}>
 <button id="play" type="button" aria-label="Play">▶</button>
 <div>
 <p id="status"></p>
 <canvas id="wave"></canvas>
 </div>
 <p id="now"></p>
-<p id="next"></p>
-<p id="source"></p>
+<p id="pick"><button id="back" type="button" hidden>← Live</button><select id="source" aria-label="Source"><option value="">Live</option></select></p>
 <p id="vol"><button id="mute" type="button" aria-label="Mute"><svg viewBox="0 0 16 16" width="1.2em" height="1.2em" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 6h3l4-3v10l-4-3h-3z" fill="currentColor" stroke="none"/><path class="on" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.5 3.5a6.5 6.5 0 0 1 0 9"/><path class="off" d="M10.5 6l4 4M14.5 6l-4 4"/></svg></button><input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume"></p>
 </div>
 
