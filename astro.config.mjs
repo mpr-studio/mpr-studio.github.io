@@ -7,5 +7,10 @@ export default defineConfig({
   trailingSlash: "always",
   build: { format: "directory" },
   integrations: [markdoc()],
+  // The broadcasts moved under /radio/ on 2026-10-21.
+  redirects: {
+    "/broadcasts": "/radio/",
+    "/broadcasts/[slug]": "/radio/[slug]",
+  },
   vite: { plugins: [tailwindcss()] },
 });

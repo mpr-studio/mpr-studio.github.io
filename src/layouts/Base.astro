@@ -10,7 +10,7 @@ const schedule = all.map(({ b, guests }) => ({ start: b.data.date.toISOString(),
 interface Props { title?: string }
 const { title } = Astro.props;
 const path = Astro.url.pathname;
-const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith("/precedents-report") ? "report" : path.startsWith("/course") ? "course" : "radio";
+const section = path.startsWith("/radio") ? "radio" : path.startsWith("/precedents-report") ? "report" : path.startsWith("/course") ? "course" : "radio";
 ---
 <!doctype html>
 <html lang="en">
@@ -24,7 +24,7 @@ const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith(
   // Old addresses (#course, #broadcasts, #broadcast-1) go to their pages.
   (function () {
     var h = location.hash, m = h.match(/^#broadcast-(\d+)$/);
-    var to = h === "#course" ? "/course/" : h === "#broadcasts" ? "/broadcasts/" : m ? "/broadcasts/" + (slugs[m[1]] ? slugs[m[1]] + "/" : "") : null;
+    var to = h === "#course" ? "/course/" : h === "#broadcasts" ? "/radio/" : m ? "/radio/" + (slugs[m[1]] ? slugs[m[1]] + "/" : "") : null;
     if (to) location.replace(to);
   })();
 </script>
@@ -34,7 +34,7 @@ const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith(
 
 <header>
 <a href="/">Montez Press Radio Studio</a>
-<nav><a href="/broadcasts/" aria-current={section === "broadcasts" ? "page" : undefined}>Broadcasts</a> <a href="/precedents-report/" aria-current={section === "report" ? "page" : undefined}>Precedents report</a> <a href="/course/" aria-current={section === "course" ? "page" : undefined}>Course</a></nav>
+<nav><a href="/radio/" aria-current={section === "radio" ? "page" : undefined}>Radio</a> <a href="/precedents-report/" aria-current={section === "report" ? "page" : undefined}>Precedents report</a> <a href="/course/" aria-current={section === "course" ? "page" : undefined}>Course</a></nav>
 </header>
 
 <main>
@@ -42,6 +42,7 @@ const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith(
 </main>
 
 <div id="player" transition:persist data-schedule={JSON.stringify(schedule)} data-broadcasts={JSON.stringify(archive)}>
+<p id="bar"><span>Montez Press Radio Studio Radio</span><a href="/radio/" aria-label="About the radio">?</a></p>
 <button id="play" type="button" aria-label="Play">▶</button>
 <div>
 <p id="status"></p>

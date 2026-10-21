@@ -8,7 +8,7 @@ export async function broadcasts() {
   return Promise.all(list.map(async (b) => ({ b, guests: (await getEntries(b.data.guests ?? [])).map((g) => g.data.name) })));
 }
 export const aired = (b: Broadcast) => Boolean(b.data.audio);
-export const url = (b: Broadcast) => `/broadcasts/${b.id}/`;
+export const url = (b: Broadcast) => `/radio/${b.id}/`;
 export const title = (b: Broadcast) => `${b.data.theme} (Broadcast ${b.data.number})`;
 export const and = (names: string[]) =>
   names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names.at(-1) : names[0] ?? "";

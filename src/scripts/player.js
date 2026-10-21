@@ -166,7 +166,7 @@ let onAir = false;
 function nextBroadcast() {
   const el = document.getElementById("next-broadcast");
   if (!el) return;
-  if (onAir) { el.innerHTML = '<a href="/broadcasts/" class="live">On air now</a>'; return; }
+  if (onAir) { el.innerHTML = '<a href="/radio/" class="live">On air now</a>'; return; }
   const t = Date.now(), s = schedule.find((s) => !s.aired && Date.parse(s.start) + 3600e3 > t);
   if (!s) { el.textContent = ""; return; }
   const zone = { timeZone: "America/New_York" }, d = new Date(s.start);
@@ -174,7 +174,7 @@ function nextBroadcast() {
   const hour = d.toLocaleTimeString("en-US", { ...zone, hour: "numeric", minute: "2-digit" }).replace(":00", "").replace("AM", "am").replace("PM", "pm");
   el.innerHTML = "";
   const a = document.createElement("a");
-  a.href = "/broadcasts/";
+  a.href = "/radio/";
   a.textContent = `Next broadcast: ${day}, ${hour}: ${s.theme}${s.guests ? ", with " + s.guests : ""}`;
   el.append(a);
 }

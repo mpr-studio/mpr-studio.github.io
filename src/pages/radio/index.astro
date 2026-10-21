@@ -1,0 +1,38 @@
+---
+import Base from "../../layouts/Base.astro";
+import Remote from "../../components/Remote.astro";
+import { broadcasts, aired, url, title, and, short, hour } from "../../lib/broadcasts";
+const all = await broadcasts();
+const upcoming = all.filter(({ b }) => !aired(b));
+const archive = all.filter(({ b }) => aired(b)).reverse();
+---
+<Base title="Radio">
+<h1>Montez Press Radio Studio Radio</h1>
+<p>Montez Press Radio Studio Radio is the online radio station of Montez Press Radio Studio, an option studio taught by APRDELESP at Cornell University's Department of Architecture in the fall of 2026. The studio is designing a new space for <a href="https://radio.montezpress.com">Montez Press Radio</a>, an experimental nonprofit broadcasting and performance platform that has been streaming live from Chinatown, NYC, since 2018, and that is moving from Canal Street to 215 Centre Street, a few blocks away. We started a radio station of our own.</p>
+<p>It will stream live six times this semester: one-hour shows, in which we read and discuss the precedents report, a collection of short illustrated texts the studio wrote about places tied to the project by adjacency: Montez Press Radio and its new neighbors, the jail being built two blocks away, the jail it is replacing, and other spaces and institutions that do something like what Montez Press Radio does. Each show takes one theme from the report and is hosted by the students who wrote about it and is sometimes joined by a guest. The rest of the time, the station plays music from its library.</p>
+<p id="next-broadcast"></p>
+{upcoming.length > 0 && (
+  <Fragment>
+    <h2>Upcoming</h2>
+    <ul class="upcoming">
+      {upcoming.map(({ b, guests }) => (
+        <li><time datetime={b.data.date.toISOString()}>{short(b.data.date)}, {hour(b.data.date)}</time> {b.data.theme}{guests.length > 0 && `, with ${and(guests)}`}</li>
+      ))}
+    </ul>
+  </Fragment>
+)}
+{archive.length > 0 && (
+  <Fragment>
+    <h2>Archive</h2>
+    {archive.map(({ b, guests }) => (
+      <article class="archived">
+        <h3><a href={url(b)}>{title(b)}</a></h3>
+        <p><time datetime={b.data.date.toISOString()}>{short(b.data.date)}</time>, {Math.round((b.data.duration ?? 0) / 60)} minutes{guests.length > 0 && `, with ${and(guests)}`}.</p>
+        <Remote b={b} />
+        {b.data.hosts.length > 0 && <p>Hosted by {and(b.data.hosts)}.</p>}
+        <p><a href={url(b)}>Read more</a></p>
+      </article>
+    ))}
+  </Fragment>
+)}
+</Base>
