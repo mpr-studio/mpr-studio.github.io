@@ -21,7 +21,7 @@ const read = (await vignettes()).filter((v) => v.data.broadcast === b.data.numbe
 <Content />
 {read.length > 0 && (
   <Fragment>
-    <h2>{read.length > 1 ? "Vignettes" : "Vignette"}</h2>
+    <h2>Precedents report</h2>
     <ul class="list-none p-0">
       {read.map((v) => <li><a href={vignetteUrl(v)}>{v.data.title}</a>, by {and(v.data.authors)}</li>)}
     </ul>

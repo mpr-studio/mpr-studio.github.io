@@ -18,10 +18,9 @@ const playable = broadcast?.data.audio && v.data.start;
 <article class="texto">
 <h1>{v.data.title}</h1>
 <p>By {and(v.data.authors)}</p>
-{broadcast && (
-  <p>Read on {broadcast.data.audio ? <a href={url(broadcast)}>{title(broadcast)}</a> : title(broadcast)}{playable && (
-    <Fragment>. <button class="listen" type="button" data-listen={broadcast.data.audio} data-t={seconds(v.data.start!)}>▶ Listen from {v.data.start}</button></Fragment>
-  )}</p>
+{broadcast && <p>Read on {broadcast.data.audio ? <a href={url(broadcast)}>{title(broadcast)}</a> : title(broadcast)}.</p>}
+{playable && (
+  <p class="listen-row"><button class="show-play listen" type="button" data-listen={broadcast!.data.audio} data-t={seconds(v.data.start!)} aria-label={`Listen from ${v.data.start}`}>▶</button><span>Listen from {v.data.start}</span></p>
 )}
 <Content />
 </article>
