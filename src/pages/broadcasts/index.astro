@@ -14,7 +14,7 @@ const archive = await Promise.all(all.filter(({ b }) => aired(b)).reverse().map(
     <h2>Upcoming</h2>
     <ul class="upcoming">
       {upcoming.map(({ b, guests }) => (
-        <li><time datetime={b.data.date.toISOString()}>{short(b.data.date)}, {hour(b.data.date)}</time> {b.data.theme}{guests.length > 0 && ` · ${and(guests)}`}</li>
+        <li><time datetime={b.data.date.toISOString()}>{short(b.data.date)}, {hour(b.data.date)}</time> {b.data.theme}{guests.length > 0 && `, with ${and(guests)}`}</li>
       ))}
     </ul>
   </Fragment>

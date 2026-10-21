@@ -1,0 +1,19 @@
+/* Tailwind's theme and utilities, without its reset (preflight), so the
+   site's own element styles keep the look. Those live in style.css, in the
+   base layer, so utility classes always win over them. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "./style.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --font-sans: "Areal", Arial, Helvetica, sans-serif;
+  --color-live: #e10600;
+  --color-muted: #bbb;
+  /* The text column, and the margin beside it on wide screens (notes, small
+     images); "full width" is both. */
+  --spacing-columna: 34em;
+  --spacing-margen: 14em;
+  --spacing-hueco: 2em;
+  --breakpoint-xl: 80rem;
+}

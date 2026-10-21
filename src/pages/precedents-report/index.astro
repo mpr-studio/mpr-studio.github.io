@@ -1,0 +1,19 @@
+---
+import Base from "../../layouts/Base.astro";
+import { broadcasts, vignettes, aired, url, title, and, vignetteUrl } from "../../lib/broadcasts";
+const all = await broadcasts();
+const vs = await vignettes();
+const themes = all.map(({ b }) => ({ b, list: vs.filter((v) => v.data.broadcast === b.data.number) })).filter((t) => t.list.length);
+---
+<Base title="Precedents report">
+<h1>Precedents report</h1>
+<p>The studio will begin with a collective precedents report. Each student will research at least one case study: a space or an institution tied to ours by adjacency — political or economic adjacency to the jail, spatial adjacency to the new building, thematic adjacency to what MPR does; the jail itself, the jails it is replacing, MPR and its neighbors themselves. Each case will be written as a vignette: a short, illustrated text (200–500 words) with maps, floor plans, and other images. The vignettes will be edited together into a single report. Out of these precedents we hope to find patterns and types, but instead of making a main thesis or providing a singular argument for the project, the report will serve as a set of characters that we can refer to as we think through the design, both within the studio and with guests. From week 8, the report goes on air: a live show, most weeks, in which the vignettes are read, discussed with the public and with guests, and brought back to the projects.</p>
+{themes.map(({ b, list }) => (
+  <Fragment>
+    <h2>{aired(b) ? <a href={url(b)}>{title(b)}</a> : title(b)}</h2>
+    <ul class="list-none p-0">
+      {list.map((v) => <li><a href={vignetteUrl(v)}>{v.data.title}</a>, by {and(v.data.authors)}</li>)}
+    </ul>
+  </Fragment>
+))}
+</Base>

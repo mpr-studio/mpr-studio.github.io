@@ -188,12 +188,12 @@ async function nowPlaying() {
     if (show) { station = live ? "On air now" : "From the library"; showSwap(); return; }
     station = live ? "On air now" : "From the library";
     showSwap();
-    const listening = d.listeners.current ? " · " + d.listeners.current + " listening" : "";
+    const listening = d.listeners.current ? ", " + d.listeners.current + " listening" : "";
     status.innerHTML = live ? ICON.live + " On air" + listening : ICON.library + " From the library" + listening;
     status.className = live ? "live" : "";
     const song = d.now_playing.song;
     const playing = live ? d.live.streamer_name || song.text : song.text;
-    setNow(["Now playing: " + playing, live ? "" : nextShow()].filter(Boolean).join(" · "));
+    setNow(["Now playing: " + playing, live ? "" : nextShow()].filter(Boolean).join(". "));
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: playing,
@@ -292,7 +292,7 @@ function showSwap() {
     if (onAir) swap.className = "live";
   } else {
     const b = last ?? latest;
-    swap.textContent = b ? `↩ ${b.title}${b.pos > 5 ? ", " + clock(b.pos) : ""}` : "\u00a0";
+    swap.textContent = b ? `↩ ${b.theme} (${b.title})${b.pos > 5 ? ", " + clock(b.pos) : ""}` : "\u00a0";
   }
   swap.disabled = !show && !(last ?? latest);
 }
@@ -319,9 +319,9 @@ function switchTo(target, { play } = {}) {
     player.classList.add("archive");
     status.className = "";
     nowText = null;
-    setNow([show.theme, show.guests && "with " + show.guests].filter(Boolean).join(" · "));
+    setNow(`${show.theme} (${show.title})${show.guests ? ", with " + show.guests : ""}`);
     if ("mediaSession" in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: show.title + ": " + show.theme, artist: "Montez Press Radio Studio Radio" });
+      navigator.mediaSession.metadata = new MediaMetadata({ title: `${show.theme} (${show.title})`, artist: "Montez Press Radio Studio Radio" });
     }
   } else {
     audio.removeAttribute("src");
@@ -402,7 +402,7 @@ audio.addEventListener("timeupdate", () => {
   try { navigator.mediaSession.setPositionState({ duration: audio.duration, position: Math.min(audio.currentTime, audio.duration), playbackRate: 1 }); } catch {}
 });
 function update() {
-  if (show) status.textContent = `${show.title} · ${clock(pending ?? audio.currentTime)} / ${clock(duration(show))}`;
+  if (show) status.textContent = `${clock(pending ?? audio.currentTime)} / ${clock(duration(show))}`;
   for (const { el, b } of remotes) {
     const mine = show === b, t = mine ? pending ?? audio.currentTime : b.pos;
     el.querySelector(".show-time").textContent = `${clock(t)} / ${clock(duration(b))}`;
@@ -440,6 +440,10 @@ document.addEventListener("astro:page-load", () => {
       c.onclick = () => playShow(b, Number(c.dataset.t));
     }
   }
+  for (const l of document.querySelectorAll("main [data-listen]")) {
+    l.onclick = () => { const b = catalog.get(l.dataset.listen); if (b) playShow(b, Number(l.dataset.t)); };
+  }
+  for (const a of document.querySelectorAll("main .fuentes li")) a.id ||= "fuente-" + ([...a.parentNode.children].indexOf(a) + 1);
   for (const a of document.querySelectorAll("a[href^='http']")) {
     if (a.host !== location.host) { a.target = "_blank"; a.rel = "noopener"; }
   }

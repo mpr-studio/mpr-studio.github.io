@@ -26,4 +26,18 @@ const guests = defineCollection({
   schema: z.object({ name: z.string() }),
 });
 
-export const collections = { broadcasts, guests };
+// One Markdoc file per vignette of the precedents report. "broadcast" is the
+// number of the broadcast where it's read (its theme); "start" is when the
+// reading starts in that broadcast's recording, once it has aired.
+const vignettes = defineCollection({
+  loader: glob({ pattern: "*.mdoc", base: "src/content/vignettes" }),
+  schema: z.object({
+    title: z.string(),
+    authors: z.array(z.string()),
+    broadcast: z.number(),
+    order: z.number().default(0),
+    start: z.string().optional(),  // "5:48"
+  }),
+});
+
+export const collections = { broadcasts, guests, vignettes };

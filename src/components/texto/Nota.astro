@@ -1,0 +1,7 @@
+---
+// A note: a number in the text, and the note itself, which sits in the margin
+// on wide screens and opens as a small window on narrower ones (the number
+// toggles it). Numbered with a CSS counter, per page.
+const id = "nota-" + Math.random().toString(36).slice(2, 8);
+---
+<span class="nota"><button class="nota-num" type="button" popovertarget={id} aria-label="Note"></button><span class="nota-texto" id={id} popover role="note"><slot /></span></span>

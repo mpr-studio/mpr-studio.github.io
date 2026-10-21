@@ -1,0 +1,7 @@
+---
+// A row-wrapping gallery: each image takes width in proportion to its shape,
+// so rows of mixed images line up in height. Opens as one set in the viewer.
+interface Props { ancho?: "columna" | "completo" }
+const { ancho = "completo" } = Astro.props;
+---
+<div class={`galeria my-8 xl:clear-right flex flex-wrap items-start gap-1 ${ancho === "completo" ? "xl:w-[calc(100%+var(--spacing-margen)+var(--spacing-hueco))]" : ""}`}><slot /></div>

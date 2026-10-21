@@ -1,6 +1,6 @@
 ---
 import { ClientRouter } from "astro:transitions";
-import "../styles/style.css";
+import "../styles/global.css";
 import { broadcasts, and } from "../lib/broadcasts";
 const all = await broadcasts();
 const slugs = Object.fromEntries(all.map(({ b }) => [b.data.number, b.id]));
@@ -10,7 +10,7 @@ const schedule = all.map(({ b, guests }) => ({ start: b.data.date.toISOString(),
 interface Props { title?: string }
 const { title } = Astro.props;
 const path = Astro.url.pathname;
-const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith("/course") ? "course" : "radio";
+const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith("/precedents-report") ? "report" : path.startsWith("/course") ? "course" : "radio";
 ---
 <!doctype html>
 <html lang="en">
@@ -34,7 +34,7 @@ const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith(
 
 <header>
 <a href="/">Montez Press Radio Studio</a>
-<nav><a href="/" aria-current={section === "radio" ? "page" : undefined}>Radio</a> <a href="/broadcasts/" aria-current={section === "broadcasts" ? "page" : undefined}>Broadcasts</a> <a href="/course/" aria-current={section === "course" ? "page" : undefined}>Course</a></nav>
+<nav><a href="/" aria-current={section === "radio" ? "page" : undefined}>Radio</a> <a href="/broadcasts/" aria-current={section === "broadcasts" ? "page" : undefined}>Broadcasts</a> <a href="/precedents-report/" aria-current={section === "report" ? "page" : undefined}>Precedents report</a> <a href="/course/" aria-current={section === "course" ? "page" : undefined}>Course</a></nav>
 </header>
 
 <main>
@@ -53,6 +53,13 @@ const section = path.startsWith("/broadcasts") ? "broadcasts" : path.startsWith(
 </div>
 
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<dialog id="visor" transition:persist aria-label="Image viewer">
+<button class="visor-cerrar" type="button" aria-label="Close">×</button>
+<button class="visor-anterior" type="button" aria-label="Previous">←</button>
+<figure><img alt="" /><figcaption></figcaption></figure>
+<button class="visor-siguiente" type="button" aria-label="Next">→</button>
+</dialog>
 <script src="../scripts/player.js"></script>
+<script src="../scripts/visor.js"></script>
 </body>
 </html>

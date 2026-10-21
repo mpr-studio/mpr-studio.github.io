@@ -2,7 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import Remote from "../../components/Remote.astro";
 import { getEntries, render } from "astro:content";
-import { broadcasts, aired, title, and, long } from "../../lib/broadcasts";
+import { broadcasts, aired, title, and, long, vignettes, vignetteUrl, seconds } from "../../lib/broadcasts";
 
 // A broadcast gets its page once it has aired (has a recording).
 export async function getStaticPaths() {
@@ -11,7 +11,7 @@ export async function getStaticPaths() {
 const { b } = Astro.props;
 const { Content } = await render(b);
 const guests = await Promise.all((await getEntries(b.data.guests)).map(async (g) => ({ name: g.data.name, Bio: (await render(g)).Content })));
-const seconds = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);
+const read = (await vignettes()).filter((v) => v.data.broadcast === b.data.number);
 ---
 <Base title={title(b)}>
 <h1>{title(b)}</h1>
@@ -19,6 +19,14 @@ const seconds = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n),
 <Remote b={b} />
 <p>{b.data.hosts.length > 0 && `Hosted by ${and(b.data.hosts)}.`}{guests.length > 0 && ` ${guests.length > 1 ? "Guests" : "Guest"}: ${and(guests.map((g) => g.name))}.`}</p>
 <Content />
+{read.length > 0 && (
+  <Fragment>
+    <h2>{read.length > 1 ? "Vignettes" : "Vignette"}</h2>
+    <ul class="list-none p-0">
+      {read.map((v) => <li><a href={vignetteUrl(v)}>{v.data.title}</a>, by {and(v.data.authors)}</li>)}
+    </ul>
+  </Fragment>
+)}
 {b.data.chapters.length > 0 && (
   <Fragment>
     <h2>Chapters</h2>

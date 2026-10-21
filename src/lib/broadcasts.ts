@@ -9,10 +9,17 @@ export async function broadcasts() {
 }
 export const aired = (b: Broadcast) => Boolean(b.data.audio);
 export const url = (b: Broadcast) => `/broadcasts/${b.id}/`;
-export const title = (b: Broadcast) => `Broadcast ${b.data.number}: ${b.data.theme}`;
+export const title = (b: Broadcast) => `${b.data.theme} (Broadcast ${b.data.number})`;
 export const and = (names: string[]) =>
   names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names.at(-1) : names[0] ?? "";
 export const short = (d: Date) => d.toLocaleDateString("en-US", { ...zone, weekday: "short", month: "numeric", day: "numeric" }).replace(",", "");
 export const long = (d: Date) => d.toLocaleDateString("en-US", { ...zone, weekday: "long", month: "long", day: "numeric", year: "numeric" });
 export const hour = (d: Date) => d.toLocaleTimeString("en-US", { ...zone, hour: "numeric", minute: "2-digit" }).replace(":00", "").replace("AM", "am").replace("PM", "pm");
 export const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+
+export type Vignette = CollectionEntry<"vignettes">;
+export const vignetteUrl = (v: Vignette) => `/precedents-report/${v.id}/`;
+export async function vignettes() {
+  return (await getCollection("vignettes")).sort((a, b) => a.data.broadcast - b.data.broadcast || a.data.order - b.data.order || a.data.title.localeCompare(b.data.title));
+}
+export const seconds = (t: string) => t.split(":").reduce((a, n) => a * 60 + Number(n), 0);

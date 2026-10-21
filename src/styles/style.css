@@ -176,3 +176,37 @@ sup { line-height: 0; }
   body { padding-bottom: 12em; padding-left: 1em; }
   h1 { font-size: 2.4em; overflow-wrap: break-word; }
 }
+
+/* Texts (vignettes): notes, sources and galleries, after the Parques site. */
+.texto { counter-reset: nota; }
+.nota { counter-increment: nota; }
+.nota-num { font: inherit; font-size: .7em; vertical-align: super; line-height: 0; padding: 0 .1em; color: inherit; background: none; border: 0; cursor: pointer; text-decoration: underline; }
+.nota-num::before { content: counter(nota); }
+.nota-texto { font-size: .75em; line-height: 1.4; }
+.nota-texto::before { content: counter(nota) ". "; }
+/* Narrower screens: the note opens in a small window near the bottom. */
+.nota-texto:popover-open { position: fixed; inset: auto 1em 1em 1em; margin: 0; max-width: 28em; padding: .75em; background: white; color: black; border: 1px solid; z-index: 20; }
+/* Wide screens: notes sit in the margin, beside their line. */
+@media (min-width: 80rem) {
+  .nota-num { cursor: default; text-decoration: none; }
+  .nota-texto, .nota-texto:popover-open { display: block; position: static; inset: auto; float: right; clear: right; width: 14em; margin: .2em calc(-14em - 2em / .75) .5em 0; padding: 0; border: 0; background: none; }
+}
+.fuentes ol { padding-left: 1.5em; }
+.fuentes li { scroll-margin-top: 2em; }
+.galeria .figura { flex: var(--r) 1 calc(var(--r) * 9em); margin: 0; }
+blockquote { margin: 1.5em 0 1.5em 1.5em; }
+blockquote p { margin: 0; }
+.listen { font: inherit; padding: 0; color: inherit; background: none; border: 0; text-decoration: underline; cursor: pointer; }
+h2 a { text-decoration: none; }
+
+#visor { width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 3em 4em; border: 0; background: white; box-sizing: border-box; }
+#visor[open] { display: flex; align-items: center; justify-content: center; }
+#visor::backdrop { background: white; }
+#visor figure { margin: 0; max-width: 100%; max-height: 100%; display: flex; flex-direction: column; align-items: center; }
+#visor img { max-width: 100%; max-height: calc(100vh - 8em); object-fit: contain; }
+#visor figcaption { margin-top: .5em; font-size: .75em; }
+#visor button { font: inherit; font-size: 1.5em; color: black; background: none; border: 0; cursor: pointer; position: absolute; }
+.visor-cerrar { top: .5em; right: .75em; }
+.visor-anterior { left: .75em; top: 50%; }
+.visor-siguiente { right: .75em; top: 50%; }
+#visor button[hidden] { display: none; }

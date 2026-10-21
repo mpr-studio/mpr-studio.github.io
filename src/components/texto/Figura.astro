@@ -1,0 +1,19 @@
+---
+// An image with its caption, at one of three widths: the text column, full
+// width (column and margin) or in the margin. Click to open it in the viewer.
+import { imageSizeFromFile } from "image-size/fromFile";
+interface Props { src: string; alt?: string; pie?: string; ancho?: "columna" | "completo" | "margen" }
+const { src, alt = "", pie, ancho = "columna" } = Astro.props;
+const { width = 4, height = 3 } = await imageSizeFromFile("public" + src).catch(() => ({ width: 4, height: 3 }));
+const clases = {
+  columna: "my-8",
+  completo: "my-8 xl:clear-right xl:w-[calc(100%+var(--spacing-margen)+var(--spacing-hueco))]",
+  margen: "my-4 xl:float-right xl:clear-right xl:-mr-[calc(var(--spacing-margen)+var(--spacing-hueco))] xl:w-margen xl:mt-1 xl:mb-4",
+}[ancho];
+---
+<figure class={`figura ${clases}`} style={`--r: ${width / height}`}>
+<button class="block w-full cursor-zoom-in border-0 bg-transparent p-0" type="button" data-zoom={src} data-pie={pie} aria-label={`Enlarge: ${alt || pie || "image"}`}>
+<img class="block h-auto w-full" src={src} alt={alt} width={width} height={height} loading="lazy" />
+</button>
+{pie && <figcaption class="mt-1.5 text-[.75em] leading-snug">{pie}</figcaption>}
+</figure>

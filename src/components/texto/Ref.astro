@@ -1,0 +1,6 @@
+---
+// A numbered reference to the sources list at the end of the text.
+interface Props { n: number }
+const { n } = Astro.props;
+---
+<sup class="leading-none"><a class="no-underline" href={`#fuente-${n}`}>{n}</a></sup>

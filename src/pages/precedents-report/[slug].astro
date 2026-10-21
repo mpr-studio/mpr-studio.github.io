@@ -1,0 +1,34 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection, render } from "astro:content";
+import { vignettes, url, title, and, vignetteUrl, seconds } from "../../lib/broadcasts";
+
+export async function getStaticPaths() {
+  return (await vignettes()).map((v) => ({ params: { slug: v.id }, props: { v } }));
+}
+const { v } = Astro.props;
+const { Content } = await render(v);
+const broadcast = (await getCollection("broadcasts")).find((x) => x.data.number === v.data.broadcast);
+const theme = (await vignettes()).filter((x) => x.data.broadcast === v.data.broadcast);
+const i = theme.findIndex((x) => x.id === v.id);
+const [prev, next] = [theme[i - 1], theme[i + 1]];
+const playable = broadcast?.data.audio && v.data.start;
+---
+<Base title={v.data.title}>
+<article class="texto">
+<h1>{v.data.title}</h1>
+<p>By {and(v.data.authors)}</p>
+{broadcast && (
+  <p>Read on {broadcast.data.audio ? <a href={url(broadcast)}>{title(broadcast)}</a> : title(broadcast)}{playable && (
+    <Fragment>. <button class="listen" type="button" data-listen={broadcast.data.audio} data-t={seconds(v.data.start!)}>▶ Listen from {v.data.start}</button></Fragment>
+  )}</p>
+)}
+<Content />
+</article>
+{(prev || next) && (
+  <nav class="mt-16 flex justify-between gap-8 border-t pt-2">
+    <span>{prev && <a href={vignetteUrl(prev)}>← {prev.data.title}</a>}</span>
+    <span class="text-right">{next && <a href={vignetteUrl(next)}>{next.data.title} →</a>}</span>
+  </nav>
+)}
+</Base>
