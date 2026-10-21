@@ -215,4 +215,4 @@ h2 a { text-decoration: none; }
 /* The player's title bar: the station's name, and ? for the radio page. */
 #bar { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 1em; margin: 0; }
 #bar span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-#bar a { flex: none; width: 1.3em; height: 1.3em; line-height: 1.25em; text-align: center; border: 1px solid; border-radius: 50%; text-decoration: none; }
+#bar a { flex: none; padding: 0 .1em; text-decoration: none; }
