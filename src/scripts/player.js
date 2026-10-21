@@ -411,6 +411,11 @@ function update() {
     play.setAttribute("aria-label", on ? "Pause" : "Play");
     paintShow(el.querySelector(".show-wave"), b, t, "black");
   }
+  for (const l of document.querySelectorAll("main [data-listen]")) {
+    const on = show && show.src === l.dataset.listen && !audio.paused;
+    l.textContent = on ? "❚❚" : "▶";
+    l.setAttribute("aria-label", on ? "Pause" : l.closest(".listen-row")?.textContent.trim() || "Listen");
+  }
   if (show) draw();
 }
 for (const ev of ["timeupdate", "play", "pause", "loadedmetadata", "seeked"]) audio.addEventListener(ev, update);
@@ -441,7 +446,14 @@ document.addEventListener("astro:page-load", () => {
     }
   }
   for (const l of document.querySelectorAll("main [data-listen]")) {
-    l.onclick = () => { const b = catalog.get(l.dataset.listen); if (b) playShow(b, Number(l.dataset.t)); };
+    // Plays the broadcast from where the vignette is read; once it's playing,
+    // the same button pauses and resumes it.
+    l.onclick = () => {
+      const b = catalog.get(l.dataset.listen);
+      if (!b) return;
+      if (show === b) toggle();
+      else playShow(b, Number(l.dataset.t));
+    };
   }
   for (const a of document.querySelectorAll("main .fuentes li")) a.id ||= "fuente-" + ([...a.parentNode.children].indexOf(a) + 1);
   for (const a of document.querySelectorAll("a[href^='http']")) {
