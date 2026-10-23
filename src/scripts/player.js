@@ -188,7 +188,9 @@ async function nowPlaying() {
     if (show) { station = live ? "On air now" : "From the library"; showSwap(); return; }
     station = live ? "On air now" : "From the library";
     showSwap();
-    const listening = d.listeners.current ? ", " + d.listeners.current + " listening" : "";
+    // Only a number goes into innerHTML below: anything else from the API is dropped.
+    const count = Number(d.listeners.current);
+    const listening = count > 0 ? ", " + count + " listening" : "";
     status.innerHTML = live ? ICON.live + " On air" + listening : ICON.library + " From the library" + listening;
     status.className = live ? "live" : "";
     const song = d.now_playing.song;
