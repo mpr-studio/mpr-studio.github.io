@@ -5,10 +5,10 @@ date: 2026-10-16T13:00:00-04:00
 audio: https://mpr-studio.github.io/broadcasts/broadcast-1.mp3
 peaks: /broadcasts/broadcast-1.json
 duration: 3376
-hosts: [Dan Girgis, Rodrigo Escandón Cesarman]
+hosts: [Dan Girgis]
 guests: [julian-escudero-geltman]
 chapters:
-  - { time: "0:00", title: "Introduction: the station and the guests" }
+  - { time: "0:00", title: "Introduction: the station, the host, and the guest" }
   - { time: "5:48", title: "Dan reads “A Critical Look at Architectural Critique Today”" }
   - { time: "15:48", title: "Nostalgia, and what mediates the discourse" }
   - { time: "25:55", title: "Does anyone talk about buildings now?" }
