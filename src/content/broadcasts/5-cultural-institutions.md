@@ -17,7 +17,7 @@ chapters:
   - { time: "21:54", title: "Art institutions and corporate America: value and benefit" }
   - { time: "24:30", title: "Ways of funding culture, and MoMA’s visitor count" }
   - { time: "29:05", title: "Why it is hard to talk about money" }
-  - { time: "31:54", title: "Taking the jail money" }
+  - { time: "31:54", title: "The grant behind 215 Centre Street" }
   - { time: "35:29", title: "Building income into the projects: a kitchen, studios, desks" }
   - { time: "37:38", title: "Sharing resources, back offices, and what can’t be shared" }
   - { time: "42:36", title: "Art outside the gallery: phone booths on Sixth Avenue" }

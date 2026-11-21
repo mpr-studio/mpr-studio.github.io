@@ -4,7 +4,7 @@ theme: Land value and gentrification
 date: 2026-11-13T13:00:00-05:00
 audio: https://mpr-studio.github.io/broadcasts/broadcast-4.mp3
 peaks: /broadcasts/broadcast-4.json
-duration: 3704
+duration: 3854
 hosts: [Sara Shah, Jay Son, Matt Miller, Qian (Julia) Xiang]
 chapters:
   - { time: "0:00", title: "Introduction: the station, the hosts, and the theme" }
