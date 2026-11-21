@@ -15,7 +15,7 @@ chapters:
   - { time: "22:08", title: "Patti Smith, “Elegie,” from the last night of CBGB" }
   - { time: "28:16", title: "Who benefits when a neighborhood changes? Ownership" }
   - { time: "31:49", title: "Authenticity, artists, and what comes after them" }
-  - { time: "35:40", title: "The fire escape, the neighbor, and where the value goes" }
+  - { time: "35:40", title: "The fire escape and the neighbor" }
   - { time: "36:25", title: "Can a cultural organization share in the value it creates?" }
   - { time: "41:30", title: "Eckhaus Latta in the Chinatown mall, John Varvatos in CBGB" }
   - { time: "47:34", title: "What architecture can do: signage, image, and spaces designed by their users" }
